@@ -267,9 +267,9 @@ export async function decryptFragmentFromE2EE(
       try {
         const ctBytes = base64UrlToUint8Array(envelope.rCt);
         const plainBytes = await crypto.subtle.decrypt(
-          { name: "AES-GCM", iv },
+          { name: "AES-GCM", iv: iv as unknown as BufferSource },
           sharedAesKey,
-          ctBytes,
+          ctBytes as unknown as BufferSource,
         );
         return new TextDecoder().decode(plainBytes);
       } catch {
@@ -282,9 +282,9 @@ export async function decryptFragmentFromE2EE(
       try {
         const ctBytes = base64UrlToUint8Array(envelope.sCt);
         const plainBytes = await crypto.subtle.decrypt(
-          { name: "AES-GCM", iv },
+          { name: "AES-GCM", iv: iv as unknown as BufferSource },
           sharedAesKey,
-          ctBytes,
+          ctBytes as unknown as BufferSource,
         );
         return new TextDecoder().decode(plainBytes);
       } catch (err) {

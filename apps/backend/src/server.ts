@@ -67,5 +67,10 @@ if (fs.existsSync(distDir)) {
   });
 }
 
-const port = env.port || 3000;
-await app.listen({ host: "0.0.0.0", port });
+if (!process.env.VERCEL) {
+  const port = env.port || 3000;
+  await app.listen({ host: "0.0.0.0", port });
+}
+
+export default app;
+

@@ -167,13 +167,18 @@ export class PrismaCapsuleRepository implements CapsuleRepository {
 
   async expireStale(): Promise<number> {
     try {
-      const affected = await this.db.$executeRaw`
-        UPDATE "Capsule"
-        SET    "status"    = 'EXPIRED'::"CapsuleStatus"
-        WHERE  "status"    = 'ACTIVE'::"CapsuleStatus"
-          AND  "expiresAt" <= clock_timestamp()
-      `;
-      return affected;
+      const result = await this.db.capsule.updateMany({
+        where: {
+          status: "ACTIVE",
+          expiresAt: {
+            lte: new Date(),
+          },
+        },
+        data: {
+          status: "EXPIRED",
+        },
+      });
+      return result.count;
     } catch (err) {
       throw new DatabaseError("Failed to expire stale capsules.", { cause: err });
     }
@@ -182,61 +187,54 @@ export class PrismaCapsuleRepository implements CapsuleRepository {
   async consumeView(id: string): Promise<StoredCapsule> {
     try {
       return await this.db.$transaction(async (tx) => {
-        const updated = await tx.$queryRaw<PrismaRecord[]>`
-          UPDATE "Capsule"
-          SET
-            "currentViews" = "currentViews" + 1,
-            "status" = CASE
-              WHEN ("currentViews" + 1) >= "maxViews"
-                THEN 'VIEW_LIMIT_REACHED'::"CapsuleStatus"
-              ELSE 'ACTIVE'::"CapsuleStatus"
-            END
-          WHERE "id"       = ${id}
-            AND "status"   = 'ACTIVE'::"CapsuleStatus"
-            AND "currentViews" < "maxViews"
-            AND "expiresAt" > clock_timestamp()
-          RETURNING *
-        `;
+        const existing = await tx.capsule.findUnique({ where: { id } });
 
-        if (updated.length === 0) {
-          const existing = await tx.capsule.findUnique({ where: { id } });
+        if (!existing) {
+          throw new CapsuleNotFoundError(id);
+        }
 
-          if (!existing) {
-            throw new CapsuleNotFoundError(id);
-          }
+        if (existing.status !== "ACTIVE") {
+          throw new CapsuleNotConsumableError(
+            id,
+            existing.status as "EXPIRED" | "BURNED" | "VIEW_LIMIT_REACHED" | "REVOKED",
+          );
+        }
 
-          if (existing.status !== "ACTIVE") {
-            throw new CapsuleNotConsumableError(
-              id,
-              existing.status as "EXPIRED" | "BURNED" | "VIEW_LIMIT_REACHED" | "REVOKED",
-            );
-          }
+        const now = new Date();
+        if (existing.expiresAt <= now) {
+          await tx.capsule.update({
+            where: { id },
+            data: { status: "EXPIRED" },
+          });
+          throw new CapsuleNotConsumableError(id, "EXPIRED");
+        }
 
-          const nowRows = await tx.$queryRaw<{ now: Date }[]>`SELECT clock_timestamp() AS now`;
-          if (!Array.isArray(nowRows) || nowRows.length === 0) {
-            throw new Error("Failed to read database clock");
-          }
-
-          const firstRow = nowRows[0] as unknown as Record<string, unknown>;
-          const maybeNow =
-            (firstRow as { now?: unknown }).now ?? Object.values(firstRow)[0];
-          const dbNow = new Date(String(maybeNow));
-
-          if (existing.expiresAt <= dbNow) {
-            throw new CapsuleNotConsumableError(id, "EXPIRED");
-          }
-
+        if (existing.currentViews >= existing.maxViews) {
+          await tx.capsule.update({
+            where: { id },
+            data: { status: "VIEW_LIMIT_REACHED" },
+          });
           throw new CapsuleNotConsumableError(id, "VIEW_LIMIT_REACHED");
         }
 
-        const consumed = toDomain(updated[0]!);
+        const nextViews = existing.currentViews + 1;
+        const nextStatus =
+          nextViews >= existing.maxViews ? "VIEW_LIMIT_REACHED" : "ACTIVE";
 
-        if (consumed.burnAfterRead) {
+        if (existing.burnAfterRead) {
           await tx.capsule.delete({ where: { id } });
-          return { ...consumed, status: "BURNED" as const };
+          return { ...toDomain(existing), currentViews: nextViews, status: "BURNED" as const };
         }
 
-        return consumed;
+        const updated = await tx.capsule.update({
+          where: { id },
+          data: {
+            currentViews: nextViews,
+            status: nextStatus,
+          },
+        });
+
+        return toDomain(updated);
       });
     } catch (err) {
       if (

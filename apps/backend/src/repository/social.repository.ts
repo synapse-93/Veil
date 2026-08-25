@@ -378,9 +378,9 @@ export class PrismaSocialRepository implements SocialRepository {
           id: conv.id,
           updatedAt: conv.updatedAt.toISOString(),
           otherUser: {
-            id: otherParticipant.user.id,
-            username: otherParticipant.user.username,
-            publicKey: (otherParticipant.user as any).publicKey ?? null,
+            id: String((otherParticipant.user as any).id),
+            username: String((otherParticipant.user as any).username),
+            publicKey: (otherParticipant.user as any).publicKey ? String((otherParticipant.user as any).publicKey) : null,
           },
           lastMessage: lastMessageItem,
           unreadCount,
