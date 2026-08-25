@@ -9,31 +9,12 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./constants/policies": {
-      "types": "./dist/constants/policies.d.ts",
-      "import": "./dist/constants/policies.js",
-      "default": "./dist/constants/policies.js"
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.js",
+      "default": "./dist/*.js"
     },
-    "./errors": {
-      "types": "./dist/errors.d.ts",
-      "import": "./dist/errors.js",
-      "default": "./dist/errors.js"
-    },
-    "./share/link": {
-      "types": "./dist/share/link.d.ts",
-      "import": "./dist/share/link.js",
-      "default": "./dist/share/link.js"
-    },
-    "./types/capsule": {
-      "types": "./dist/types/capsule.d.ts",
-      "import": "./dist/types/capsule.js",
-      "default": "./dist/types/capsule.js"
-    },
-    "./validation/capsule.schema": {
-      "types": "./dist/validation/capsule.schema.d.ts",
-      "import": "./dist/validation/capsule.schema.js",
-      "default": "./dist/validation/capsule.schema.js"
-    }
+    "./package.json": "./package.json"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
