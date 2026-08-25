@@ -8,7 +8,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { CapsuleCreationRequest, CapsuleResponse } from "@secureshare/shared";
 import { createShareLink, parseShareLink } from "@secureshare/shared";
-import { encryptForShare, decryptFromShare, decodeFragment } from "../crypto/zero-knowledge.js";
+import { encryptForShare, decryptFromShare, decodeFragment, verifyFragmentPassword } from "../crypto/zero-knowledge.js";
 import { createCapsule, consumeCapsule, ApiHttpError } from "./api.js";
 
 // ---------------------------------------------------------------------------
@@ -346,5 +346,156 @@ describe("Lifecycle error handling", () => {
     const fetch = failFetch("ERR_CONNECTION_REFUSED");
     const err = await consumeCapsule(CAPSULE_ID, { fetch }).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(ApiError);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// REGRESSION: NUCLEAR capsule full lifecycle end-to-end
+// ---------------------------------------------------------------------------
+
+describe("NUCLEAR capsule lifecycle regression", () => {
+  it("allows exactly one successful unlock after wrong password attempts, then fails on subsequent attempts", async () => {
+    const secretMessage = "Top Secret Nuclear Launch Codes";
+    const correctPassword = "CorrectNuclearPassword123!";
+    const wrongPassword = "WrongPassword456!";
+
+    // 1. Sender encrypts with NUCLEAR parameters
+    const { serverPayload, fragment } = await encryptForShare(secretMessage, correctPassword);
+
+    // Verify fragment is in password mode
+    const decoded = decodeFragment(fragment);
+    expect(decoded.mode).toBe("password");
+
+    // Mock backend capsule database store
+    let capsuleStore: {
+      id: string;
+      serverPayload: typeof serverPayload;
+      maxViews: number;
+      currentViews: number;
+      status: "ACTIVE" | "BURNED";
+    } | null = {
+      id: "nuclear-capsule-uuid",
+      serverPayload,
+      maxViews: 1,
+      currentViews: 0,
+      status: "ACTIVE",
+    };
+
+    const mockServerFetch = vi.fn().mockImplementation(async (url: string, init?: RequestInit) => {
+      const parsedUrl = new URL(url, "https://example.com");
+      if (parsedUrl.pathname === "/capsules" && init?.method === "POST") {
+        return {
+          ok: true,
+          status: 201,
+          json: async () => ({
+            metadata: {
+              id: capsuleStore!.id,
+              recipe: "NUCLEAR",
+              createdAt: new Date().toISOString(),
+              expiresAt: new Date(Date.now() + 900000).toISOString(),
+              maxViews: 1,
+              currentViews: 0,
+              requiresPassword: true,
+              burnAfterRead: true,
+            },
+            encryptedPayload: capsuleStore!.serverPayload,
+          }),
+        } as Response;
+      }
+
+      if (parsedUrl.pathname === `/capsules/${capsuleStore?.id ?? "nuclear-capsule-uuid"}/consume` && init?.method === "POST") {
+        if (!capsuleStore || capsuleStore.status === "BURNED") {
+          return {
+            ok: false,
+            status: 410,
+            json: async () => ({ error: "Capsule nuclear-capsule-uuid cannot be consumed: BURNED" }),
+          } as Response;
+        }
+
+        // Increment and burn
+        capsuleStore.currentViews += 1;
+        capsuleStore.status = "BURNED";
+        const returnedPayload = capsuleStore.serverPayload;
+        // Hard-delete
+        capsuleStore = null;
+
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            metadata: {
+              id: "nuclear-capsule-uuid",
+              recipe: "NUCLEAR",
+              createdAt: new Date().toISOString(),
+              expiresAt: new Date(Date.now() + 900000).toISOString(),
+              maxViews: 1,
+              currentViews: 1,
+              requiresPassword: true,
+              burnAfterRead: true,
+            },
+            encryptedPayload: returnedPayload,
+          }),
+        } as Response;
+      }
+
+      return {
+        ok: false,
+        status: 404,
+        json: async () => ({ error: "Not found" }),
+      } as Response;
+    });
+
+    // Create capsule via API
+    const createResult = await createCapsule(
+      {
+        encryptedPayload: serverPayload,
+        recipe: "NUCLEAR",
+        ttlSeconds: 900,
+        maxViews: 1,
+        requiresPassword: true,
+        burnAfterRead: true,
+      },
+      { fetch: mockServerFetch },
+    );
+    expect(createResult.metadata.id).toBe("nuclear-capsule-uuid");
+
+    // 2. Recipient tests wrong password first (pure client-side verification - NO API consumption)
+    const isWrongValid = await verifyFragmentPassword(fragment, wrongPassword);
+    expect(isWrongValid).toBe(false);
+
+    // Verify no server call happened during password check
+    const callsBeforeConsume = mockServerFetch.mock.calls.filter(([url]) =>
+      String(url).includes("/consume"),
+    );
+    expect(callsBeforeConsume).toHaveLength(0);
+    // Capsule remains ACTIVE and intact
+    expect(capsuleStore).not.toBeNull();
+    expect(capsuleStore?.status).toBe("ACTIVE");
+    expect(capsuleStore?.currentViews).toBe(0);
+
+    // 3. Recipient tests correct password (pure client-side verification)
+    const isCorrectValid = await verifyFragmentPassword(fragment, correctPassword);
+    expect(isCorrectValid).toBe(true);
+
+    // 4. Recipient proceeds to consume and decrypt (First attempt - MUST SUCCEED)
+    const consumeResponse = await consumeCapsule("nuclear-capsule-uuid", { fetch: mockServerFetch });
+    expect(consumeResponse.metadata.id).toBe("nuclear-capsule-uuid");
+
+    const decryptedSecret = await decryptFromShare(
+      consumeResponse.encryptedPayload,
+      fragment,
+      correctPassword,
+    );
+    expect(decryptedSecret).toBe(secretMessage);
+
+    // Capsule is now burned and deleted on server
+    expect(capsuleStore).toBeNull();
+
+    // 5. Recipient (or another user) attempts second view (MUST FAIL with 410)
+    const secondAttemptError = await consumeCapsule("nuclear-capsule-uuid", { fetch: mockServerFetch }).catch(
+      (e: unknown) => e,
+    );
+    expect(secondAttemptError).toBeInstanceOf(ApiHttpError);
+    expect((secondAttemptError as ApiHttpError).status).toBe(410);
   });
 });

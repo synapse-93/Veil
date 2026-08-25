@@ -555,6 +555,7 @@ type MemoryMsg = {
   senderId: string;
   type: MessageType;
   content: string;
+  shareFragment?: string | null;
   capsuleId?: string | null;
   recipe?: SecurityRecipe | null;
   expiresAt?: Date | null;
@@ -630,6 +631,7 @@ export class InMemorySocialRepository implements SocialRepository {
           for (const msg of data.messages) {
             this.messages.set(msg.id, {
               ...msg,
+              shareFragment: msg.shareFragment ?? null,
               expiresAt: msg.expiresAt ? new Date(msg.expiresAt) : null,
               createdAt: new Date(msg.createdAt),
             });
@@ -663,6 +665,7 @@ export class InMemorySocialRepository implements SocialRepository {
         })),
         messages: Array.from(this.messages.values()).map((m) => ({
           ...m,
+          shareFragment: m.shareFragment ?? null,
           expiresAt: m.expiresAt ? m.expiresAt.toISOString() : null,
           createdAt: m.createdAt.toISOString(),
         })),
@@ -920,6 +923,7 @@ export class InMemorySocialRepository implements SocialRepository {
               senderUsername: lastSender?.username,
               type: lastMsg.type,
               content: lastMsg.content,
+              shareFragment: lastMsg.shareFragment ?? null,
               capsuleId: lastMsg.capsuleId,
               recipe: lastMsg.recipe,
               expiresAt: lastMsg.expiresAt?.toISOString(),
@@ -958,6 +962,7 @@ export class InMemorySocialRepository implements SocialRepository {
         senderUsername: sender?.username,
         type: m.type,
         content: m.content,
+        shareFragment: m.shareFragment ?? null,
         capsuleId: m.capsuleId,
         recipe: m.recipe,
         expiresAt: m.expiresAt?.toISOString(),
@@ -976,6 +981,7 @@ export class InMemorySocialRepository implements SocialRepository {
     senderId: string;
     type: MessageType;
     content: string;
+    shareFragment?: string | null;
     capsuleId?: string | null;
     recipe?: SecurityRecipe | null;
     expiresAt?: Date | null;
@@ -992,6 +998,7 @@ export class InMemorySocialRepository implements SocialRepository {
     const id = crypto.randomUUID();
     const now = new Date();
     const safeContent = this.sanitizeMessageContent(data.content);
+    const normalizedShareFragment = data.shareFragment?.trim() || null;
 
     const msg: MemoryMsg = {
       id,
@@ -999,6 +1006,7 @@ export class InMemorySocialRepository implements SocialRepository {
       senderId: data.senderId,
       type: data.type,
       content: safeContent,
+      shareFragment: normalizedShareFragment,
       capsuleId: data.capsuleId,
       recipe: data.recipe,
       expiresAt: data.expiresAt,
@@ -1022,6 +1030,7 @@ export class InMemorySocialRepository implements SocialRepository {
       senderUsername: sender?.username,
       type: data.type,
       content: safeContent,
+      shareFragment: normalizedShareFragment,
       capsuleId: data.capsuleId,
       recipe: data.recipe,
       expiresAt: data.expiresAt?.toISOString(),

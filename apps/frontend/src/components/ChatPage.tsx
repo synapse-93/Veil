@@ -52,6 +52,9 @@ import {
   CheckCircle2,
   Globe,
   ShieldCheck,
+  Copy,
+  ExternalLink,
+  Link as LinkIcon,
 } from "lucide-react";
 
 export function ChatPage() {
@@ -98,6 +101,7 @@ export function ChatPage() {
   const [decryptError, setDecryptError] = useState<string | null>(null);
   const [decryptLoading, setDecryptLoading] = useState(false);
   const [copiedNotification, setCopiedNotification] = useState(false);
+  const [copiedCapsuleMsgId, setCopiedCapsuleMsgId] = useState<string | null>(null);
   const [revokingCapsuleId, setRevokingCapsuleId] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(Date.now());
 
@@ -439,12 +443,61 @@ export function ChatPage() {
     }
   };
 
+  const getCapsuleShareUrl = (msg: MessageItem): string => {
+    if (!msg.capsuleId) return "";
+    const fragment = (msg.shareFragment && msg.shareFragment.trim()) || "";
+    if (fragment) {
+      return `${window.location.origin}/share/${encodeURIComponent(msg.capsuleId)}#${fragment}`;
+    }
+    const match = msg.content.match(/https?:\/\/[^\s]+/)?.[0];
+    return match || `${window.location.origin}/share/${encodeURIComponent(msg.capsuleId)}`;
+  };
+
+  const handleCopyCapsuleLink = (e: React.MouseEvent, msg: MessageItem) => {
+    e.stopPropagation();
+    const url = getCapsuleShareUrl(msg);
+    if (!url) return;
+    navigator.clipboard.writeText(url);
+    setCopiedCapsuleMsgId(msg.id);
+    setTimeout(() => setCopiedCapsuleMsgId(null), 2000);
+  };
+
+  const renderMessageContent = (text: string, shareFragment?: string | null) => {
+    let formattedText = text;
+    if (shareFragment) {
+      formattedText = formattedText.replace(
+        /(https?:\/\/\S*\/share\/[A-Za-z0-9_-]+)(?!#)/g,
+        `$1#${shareFragment}`,
+      );
+    }
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = formattedText.split(urlRegex);
+    return parts.map((part, i) => {
+      if (part.match(urlRegex)) {
+        return (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline decoration-amber-400/60 hover:decoration-amber-400 font-mono break-all inline-flex items-center gap-1 font-medium"
+          >
+            <span>{part}</span>
+            <ExternalLink className="w-3 h-3 inline-block shrink-0" />
+          </a>
+        );
+      }
+      return part;
+    });
+  };
+
   const handleOpenCapsuleViewer = (msg: MessageItem) => {
     setInspectingCapsuleMessage(msg);
-    const shareUrl = msg.content.match(/https?:\/\/[^\s]+#[^\s]+/)?.[0] ?? "";
-    const fragmentFromMessage = msg.shareFragment || (shareUrl ? shareUrl.split("#").pop() ?? "" : "");
+    const shareUrl = getCapsuleShareUrl(msg);
+    const fragmentFromMessage = (msg.shareFragment && msg.shareFragment.trim())
+      || (msg.content.match(/https?:\/\/[^\s]+#([^\s]+)/)?.[1] ?? "");
     setDecryptingKey(fragmentFromMessage || shareUrl);
-    setAutoFilledShareFragment(Boolean(msg.shareFragment || fragmentFromMessage));
+    setAutoFilledShareFragment(Boolean(fragmentFromMessage));
     setDecryptingPassword("");
     setDecryptedPlaintext(null);
     setDecryptError(null);
@@ -1147,6 +1200,55 @@ export function ChatPage() {
                               </div>
                             )}
 
+                            {/* Share Link Row with copy button and open button */}
+                            {(() => {
+                              const shareLink = getCapsuleShareUrl(msg);
+                              if (!shareLink) return null;
+                              const isCopied = copiedCapsuleMsgId === msg.id;
+
+                              return (
+                                <div className="mb-3 p-2 rounded-xl bg-black/30 border border-white/10 flex items-center justify-between gap-2 text-xs">
+                                  <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                    <LinkIcon className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                                    <span className="font-mono text-[10px] text-amber-200/90 truncate">
+                                      {shareLink}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <button
+                                      type="button"
+                                      id={`copy-capsule-link-${msg.id}`}
+                                      onClick={(e) => handleCopyCapsuleLink(e, msg)}
+                                      title="Copy full secret link"
+                                      className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 text-[10px] font-medium transition-colors flex items-center gap-1 cursor-pointer"
+                                    >
+                                      {isCopied ? (
+                                        <>
+                                          <Check className="w-3 h-3 text-emerald-400" />
+                                          <span className="text-emerald-300 text-[10px]">Copied</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Copy className="w-3 h-3" />
+                                          <span className="text-[10px]">Copy</span>
+                                        </>
+                                      )}
+                                    </button>
+                                    <a
+                                      id={`open-tab-capsule-${msg.id}`}
+                                      href={shareLink}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      title="Open share link in new tab"
+                                      className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 transition-colors flex items-center cursor-pointer"
+                                    >
+                                      <ExternalLink className="w-3 h-3" />
+                                    </a>
+                                  </div>
+                                </div>
+                              );
+                            })()}
+
                             {/* Action Button */}
                             {isRevoked ? (
                               <div className="w-full h-9 rounded-xl bg-rose-950/30 border border-rose-500/20 text-rose-300/70 font-medium text-xs flex items-center justify-center gap-1.5 select-none">
@@ -1214,7 +1316,7 @@ export function ChatPage() {
                           }`}
                           style={!isMe ? { color: "var(--color-veil-ink)" } : undefined}
                         >
-                          {msg.content}
+                          {renderMessageContent(msg.content, msg.shareFragment)}
                         </div>
                         <span className="text-[10px] mt-1 px-1 text-muted" style={{ color: "var(--color-veil-muted)" }}>
                           {new Date(msg.createdAt).toLocaleTimeString([], {
@@ -1543,10 +1645,69 @@ export function ChatPage() {
               </div>
             ) : (
               <form onSubmit={handleUnlockCapsule} className="space-y-4">
+                {/* Full Share Link Banner */}
+                {(() => {
+                  const fullUrl = getCapsuleShareUrl(inspectingCapsuleMessage);
+                  if (!fullUrl) return null;
+                  return (
+                    <div className="p-3 bg-amber-500/10 border border-amber-500/25 rounded-xl text-xs flex flex-col gap-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <LinkIcon className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                          <span className="font-semibold text-amber-300 text-xs">Capsule Share Link</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(fullUrl);
+                              setCopiedNotification(true);
+                              setTimeout(() => setCopiedNotification(false), 2000);
+                            }}
+                            className="px-2 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 text-[10px] font-medium transition-colors flex items-center gap-1 cursor-pointer"
+                          >
+                            {copiedNotification ? (
+                              <>
+                                <Check className="w-3 h-3 text-emerald-400" />
+                                <span className="text-emerald-300">Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3 h-3" />
+                                <span>Copy Link</span>
+                              </>
+                            )}
+                          </button>
+                          <a
+                            href={fullUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 transition-colors flex items-center cursor-pointer"
+                            title="Open in new tab"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      </div>
+                      <div className="font-mono text-[10px] text-amber-200/80 bg-black/30 p-2 rounded-lg break-all select-all border border-amber-500/15">
+                        {fullUrl}
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">
-                    Decryption Key (or Share Link)
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-medium text-slate-300">
+                      Decryption Fragment
+                    </label>
+                    {autoFilledShareFragment && (
+                      <span className="text-[10px] text-emerald-400 flex items-center gap-1 font-medium">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>Key attached</span>
+                      </span>
+                    )}
+                  </div>
                   <input
                     id="chat-decrypt-key-input"
                     name="capsule-decryption-key"
@@ -1556,9 +1717,8 @@ export function ChatPage() {
                     required
                     value={decryptingKey}
                     onChange={(e) => setDecryptingKey(e.target.value)}
-                    readOnly={autoFilledShareFragment}
-                    placeholder={autoFilledShareFragment ? "Decryption fragment auto-filled from chat" : "Paste decryption key fragment or https://...#fragment"}
-                    className={`w-full h-9 px-3 bg-black/40 border border-white/10 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 font-mono ${autoFilledShareFragment ? "cursor-default opacity-80" : ""}`}
+                    placeholder="Decryption key fragment or https://...#fragment"
+                    className="w-full h-9 px-3 bg-black/40 border border-white/10 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 font-mono"
                   />
                 </div>
 

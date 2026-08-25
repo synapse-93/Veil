@@ -86,6 +86,7 @@ export function GlassComposer({ onNavigateCreate, onNavigateChat = () => {}, onA
         burnAfterRead: response.metadata.burnAfterRead,
         requiresPassword: response.metadata.requiresPassword,
         shareUrl: shareUrl,
+        shareFragment: fragment,
       };
       setLastCreatedCapsule(capsuleInfo);
 

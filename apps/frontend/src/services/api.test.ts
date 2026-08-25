@@ -307,3 +307,66 @@ describe("consumeCapsule", () => {
     expect(err).toBeInstanceOf(ApiError);
   });
 });
+
+describe("sendMessage", () => {
+  it("preserves shareFragment while sanitizing content for capsule messages", async () => {
+    const { sendMessage } = await import("./api.js");
+    const fetch = mockFetch(201, {
+      id: "msg-1",
+      conversationId: "conv-1",
+      senderId: "user-1",
+      type: "CAPSULE",
+      content: "https://example.com/share/cap-123",
+      shareFragment: "sec-frag-xyz",
+      createdAt: new Date().toISOString(),
+    });
+
+    const res = await sendMessage(
+      "conv-1",
+      {
+        type: "CAPSULE",
+        content: "https://example.com/share/cap-123#sec-frag-xyz",
+        shareFragment: "sec-frag-xyz",
+        capsuleId: "cap-123",
+      },
+      { fetch },
+    );
+
+    const [, init] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(init.body as string);
+
+    expect(body.content).toBe("https://example.com/share/cap-123");
+    expect(body.shareFragment).toBe("sec-frag-xyz");
+    expect(res.shareFragment).toBe("sec-frag-xyz");
+  });
+
+  it("extracts shareFragment from content URL if shareFragment wasn't explicitly passed", async () => {
+    const { sendMessage } = await import("./api.js");
+    const fetch = mockFetch(201, {
+      id: "msg-2",
+      conversationId: "conv-1",
+      senderId: "user-1",
+      type: "CAPSULE",
+      content: "https://example.com/share/cap-999",
+      shareFragment: "auto-extracted-frag",
+      createdAt: new Date().toISOString(),
+    });
+
+    await sendMessage(
+      "conv-1",
+      {
+        type: "CAPSULE",
+        content: "https://example.com/share/cap-999#auto-extracted-frag",
+        capsuleId: "cap-999",
+      },
+      { fetch },
+    );
+
+    const [, init] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(init.body as string);
+
+    expect(body.content).toBe("https://example.com/share/cap-999");
+    expect(body.shareFragment).toBe("auto-extracted-frag");
+  });
+});
+

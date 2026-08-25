@@ -25,8 +25,7 @@ const corsOptions: any = {
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 };
-if (env.nodeEnv === "production") {
-  // frontendOrigin must be provided in production (asserted earlier)
+if (env.nodeEnv === "production" && env.frontendOrigin) {
   corsOptions.origin = env.frontendOrigin;
 } else {
   corsOptions.origin = true;
@@ -50,7 +49,6 @@ if (fs.existsSync(distDir)) {
   await app.register(fastifyStatic, {
     root: distDir,
     prefix: "/",
-    wildcard: false,
   });
 
   app.setNotFoundHandler((req, reply) => {

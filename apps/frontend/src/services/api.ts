@@ -455,10 +455,14 @@ export async function sendMessage(
   // Keep the raw share fragment in its own JSON field so the recipient can restore
   // the auto-filled decryption state without shipping the full URL/hash through a
   // browser navigation request. Only the visible message text is sanitized.
+  const extractedFragment = !message.shareFragment && message.content
+    ? message.content.match(/(?:https?:\/\/\S*\/share\/[A-Za-z0-9_-]+|\/share\/[A-Za-z0-9_-]+)#(\S+)/)?.[1]
+    : undefined;
+
   const safeMessage = {
     ...message,
     content: sanitizeMessageContent(message.content),
-    shareFragment: message.shareFragment?.trim() || undefined,
+    shareFragment: message.shareFragment?.trim() || extractedFragment || undefined,
   };
 
   const rawBody = await apiFetch(
