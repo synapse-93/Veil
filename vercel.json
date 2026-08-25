@@ -1,10 +1,21 @@
 {
   "version": 2,
-  "buildCommand": "npm run build:backend",
-  "rewrites": [
+  "buildCommand": "npm run build",
+  "builds": [
     {
-      "source": "/(.*)",
-      "destination": "/api"
+      "src": "apps/backend/dist/server.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "apps/frontend/dist/**"
+        ]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "apps/backend/dist/server.js"
     }
   ]
 }
