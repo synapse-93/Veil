@@ -4,11 +4,145 @@
 
 Veil is a privacy-focused secure information-sharing platform built around **temporary, controlled-access capsules**.
 
-Instead of treating sensitive information as ordinary text that permanently lives in a database or chat, Veil wraps information inside a capsule with configurable access and lifecycle controls.
+---
+
+# 🚀 Quick Start
+
+Follow these steps to run Veil locally.
+
+## 1. Requirements
+
+Install the following before starting:
+
+- **Node.js 20+**
+- **npm**
+- **PostgreSQL**
+- **Git**
+
+Check your versions:
+
+```bash
+node --version
+npm --version
+git --version
+```
+
+## 2. Clone the Repository
+
+```bash
+git clone https://github.com/synapse-93/Veil.git
+cd Veil
+```
+
+## 3. Install Dependencies
+
+From the repository root:
+
+```bash
+npm install
+```
+
+## 4. Configure Environment Variables
+
+Create the required environment files using the repository's existing environment templates/configuration.
+
+The backend requires a PostgreSQL connection and authentication secret in production-style environments.
+
+Typical backend variables are:
+
+```env
+DATABASE_URL=your_postgresql_connection_string
+JWT_SECRET=your_secure_jwt_secret
+FRONTEND_ORIGIN=http://localhost:5173
+```
+
+**Never commit real database credentials, JWT secrets, or other secrets to GitHub.**
+
+## 5. Prepare the Database
+
+From the repository root, generate the Prisma client:
+
+```bash
+npx prisma generate --schema=apps/backend/prisma/schema.prisma
+```
+
+If your local PostgreSQL database requires migrations, run the repository's Prisma migration workflow before starting the backend.
+
+## 6. Typecheck the Project
+
+```bash
+npm run typecheck
+```
+
+## 7. Build the Project
+
+```bash
+npm run build
+```
+
+## 8. Start the Backend
+
+From the repository root:
+
+```bash
+npm run dev:backend
+```
+
+The backend runs on the configured backend port, normally:
+
+```text
+http://localhost:3000
+```
+
+Health check:
+
+```text
+http://localhost:3000/health
+```
+
+Expected response:
+
+```json
+{"status":"ok"}
+```
+
+## 9. Start the Frontend
+
+Open a second terminal in the repository root:
+
+```bash
+npm run dev:frontend
+```
+
+The frontend normally runs at:
+
+```text
+http://localhost:5173
+```
+
+Open that address in your browser.
+
+## 10. Try Veil
+
+Recommended first-time flow:
+
+1. Open the home page.
+2. Create a test capsule.
+3. Enter information to protect.
+4. Configure the capsule lifecycle/access behaviour.
+5. Generate the share link.
+6. Open the share link in another browser tab/window.
+7. Test the recipient viewing flow.
+8. Test expiration/view/burn behaviour.
+9. Create an account and explore History.
+10. Open **Veil Chat** and test messaging/capsule sharing.
+11. Explore **Risk Lens**.
+
+> **Note:** The exact npm scripts available in the current checkout can be verified with `npm run` if your environment differs from the standard development setup above.
 
 ---
 
-## ✨ Overview
+# ✨ Overview
 
 Veil is designed to make sensitive information sharing simple for the user while keeping security and controlled access at the centre of the architecture.
 
@@ -71,8 +205,6 @@ The general experience is:
 
 **Create Capsule → Client-side Protection → Configure Lifecycle → Generate Share Link → Send Link → Recipient Opens Link → Capsule Access → View / Consume → Expire or Burn**
 
-This provides a simple sharing experience without requiring the recipient to navigate through the entire application.
-
 ---
 
 # ⏳ Capsule Lifecycle
@@ -105,8 +237,6 @@ Authenticated users can access account-specific functionality including:
 
 Authentication and capsule encryption are handled as separate concerns.
 
-The authentication system uses protected tokens and backend validation while the capsule cryptographic workflow remains focused on protecting capsule contents.
-
 ---
 
 # 💬 Veil Chat
@@ -123,7 +253,7 @@ Chat provides:
 - Capsule sharing through conversations
 - Direct access to shared capsule flows
 
-A capsule can be created and shared through the chat experience, allowing secure information sharing to become part of an existing conversation instead of requiring a separate external service.
+A capsule can be created and shared through the chat experience, allowing secure information sharing to become part of an existing conversation.
 
 ---
 
@@ -132,8 +262,6 @@ A capsule can be created and shared through the chat experience, allowing secure
 Authenticated users can access their capsule history through the History / Secrets interface.
 
 This provides a centralized view of capsule activity and allows users to manage capsules associated with their account.
-
-Instead of relying exclusively on manually saved links, users can return to the application and access their capsule-related information through their account.
 
 ---
 
@@ -175,26 +303,6 @@ The frontend is implemented using React and TypeScript with Vite.
 
 ---
 
-# 🧭 Application Routes
-
-The frontend provides dedicated application flows including:
-
-```text
-/
-├── /create
-├── /share/:id
-├── /secrets
-├── /history
-├── /chat
-├── /messages
-├── /about
-└── /how-it-works
-```
-
-The share route is intentionally separated from normal application navigation so that a recipient can directly open a capsule through its dedicated URL.
-
----
-
 # 🏗️ Architecture
 
 Veil is implemented as a TypeScript monorepo.
@@ -220,29 +328,21 @@ Veil/
 │       └── Validation
 │
 ├── packages/
-│   │
 │   └── shared/
 │       ├── Types
 │       ├── Constants
 │       ├── Zod Schemas
 │       └── Shared Validation
 │
-├── cli/
-│   └── Command-line client
-│
-└── tests/
-    ├── Unit
-    ├── Integration
-    └── E2E
+└── cli/
+    └── Command-line client
 ```
 
----
-
-# 🖥️ Frontend Architecture
+## Frontend Architecture
 
 The frontend is responsible for the user-facing experience and client-side security workflows.
 
-### Main responsibilities
+Main responsibilities include:
 
 - UI rendering
 - Application routing
@@ -256,22 +356,9 @@ The frontend is responsible for the user-facing experience and client-side secur
 - Risk Lens
 - Theme management
 
-### Main technologies
+## Backend Architecture
 
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
-- Web Crypto API
-- Lucide icons
-
-The application is organized into reusable components, hooks, services, cryptographic utilities, and page-level flows.
-
----
-
-# ⚙️ Backend Architecture
-
-The backend is implemented using **Fastify** and follows a layered structure.
+The backend is implemented using **Fastify** and follows a layered structure:
 
 ```text
 HTTP Request
@@ -291,41 +378,19 @@ PostgreSQL
 
 ### Controllers
 
-Responsible for:
-
-- HTTP request handling
-- Input extraction
-- Validation
-- HTTP responses
+Responsible for HTTP request handling, input extraction, validation, and HTTP responses.
 
 ### Services
 
-Responsible for:
-
-- Business logic
-- Capsule operations
-- Authentication workflows
-- Conversation logic
-- Lifecycle operations
+Responsible for business logic, capsule operations, authentication workflows, conversation logic, and lifecycle operations.
 
 ### Repositories
 
-Responsible for:
-
-- Database access
-- Prisma queries
-- Persistence operations
+Responsible for database access, Prisma queries, and persistence operations.
 
 ### Plugins
 
-Responsible for cross-cutting backend functionality such as:
-
-- Authentication
-- Rate limiting
-- Error handling
-- CORS
-
-This separation keeps API handling, business logic and persistence from being tightly coupled.
+Responsible for cross-cutting backend functionality such as authentication, rate limiting, error handling, and CORS.
 
 ---
 
@@ -345,15 +410,13 @@ The database stores application state such as:
 - Capsule metadata
 - Lifecycle information
 
-Database access is performed through Prisma rather than constructing raw SQL queries throughout the application.
+Database access is performed through Prisma.
 
 ---
 
 # 🔒 Security Architecture
 
 Security is treated as a first-class product requirement.
-
-The application separates responsibilities between the client and backend.
 
 ### Client
 
@@ -405,26 +468,6 @@ Production configuration is designed to fail closed when required deployment con
 
 ---
 
-# ⚡ Rate Limiting
-
-Sensitive API operations are protected through backend rate limiting.
-
-This includes authentication-related endpoints and capsule operations.
-
-The goal is to reduce the risk of uncontrolled automated requests against sensitive functionality.
-
----
-
-# 🔥 Capsule Consumption
-
-Capsule lifecycle operations are handled atomically where required.
-
-Consumption checks take the capsule's current state into account before transitioning it to its next lifecycle state.
-
-This helps prevent multiple simultaneous requests from incorrectly consuming a capsule beyond its configured limits.
-
----
-
 # 🧪 Testing
 
 Veil includes automated testing infrastructure covering multiple layers of the application.
@@ -449,14 +492,6 @@ Technologies include:
 
 ---
 
-# 🧰 CLI
-
-The repository also contains a command-line client package.
-
-This provides a foundation for interacting with Veil functionality outside the browser-based interface.
-
----
-
 # 🛠️ Technology Stack
 
 | Layer | Technology |
@@ -478,98 +513,21 @@ This provides a foundation for interacting with Veil functionality outside the b
 
 ---
 
-# 🚀 Local Development
-
-## Requirements
-
-- Node.js
-- npm
-- PostgreSQL
-
-## Clone
-
-```bash
-git clone https://github.com/synapse-93/Veil.git
-cd Veil
-```
-
-## Install
-
-```bash
-npm install
-```
-
-## Typecheck
-
-```bash
-npm run typecheck
-```
-
-## Build
-
-```bash
-npm run build
-```
-
-## Development
-
-Run the frontend:
-
-```bash
-npm run dev:frontend
-```
-
-Run the backend:
-
-```bash
-npm run dev:backend
-```
-
-Check the root `package.json` for the complete list of available workspace scripts.
-
----
-
 # 👨‍⚖️ Judge's Quick Tour
 
-The fastest way to understand Veil is to follow this workflow.
+The fastest way to understand Veil is to follow this workflow:
 
-### 1. Home
-
-Start on the home page to understand the product concept.
-
-### 2. Create a Capsule
-
-Create a test capsule containing information you want to protect.
-
-Explore the available lifecycle and access controls.
-
-### 3. Generate the Share Link
-
-Complete the capsule creation flow and generate the dedicated share link.
-
-### 4. Open the Share Link
-
-Open the generated link in another browser tab or window to experience the recipient flow.
-
-### 5. Test Capsule Lifecycle
-
-Test the configured view, expiration, or burn behaviour.
-
-### 6. Authentication
-
-Create an account and explore the authenticated application.
-
-### 7. History
-
-Open the History / Secrets section to explore account-specific capsule activity.
-
-### 8. Veil Chat
-
-Open Chat and test messaging and capsule sharing through a conversation.
-
-### 9. Risk Lens
-
-Explore the Risk Lens interface to understand Veil's security-oriented product layer.
+1. Open the home page.
+2. Create a test capsule.
+3. Enter information to protect.
+4. Configure lifecycle/access behaviour.
+5. Generate the share link.
+6. Open the share link in another browser tab/window.
+7. Test the recipient viewing flow.
+8. Test expiration/view/burn behaviour.
+9. Create an account and explore History.
+10. Open Veil Chat and test messaging/capsule sharing.
+11. Explore Risk Lens.
 
 ---
 
@@ -607,18 +565,6 @@ The sender should be able to define how and how long information can be accessed
 
 Security should not require the user to understand the underlying cryptographic implementation.
 
-The user experience therefore remains simple:
-
-```text
-Protect something
-       ↓
-Share it
-       ↓
-Recipient accesses it
-       ↓
-Control determines what happens next
-```
-
 ---
 
 # 📁 Repository
@@ -633,22 +579,8 @@ https://github.com/synapse-93/Veil
 
 Veil was developed for **CloneFest 2.0** with a focus on privacy-focused engineering, secure information sharing, controlled-access digital content, and a polished full-stack user experience.
 
-The project combines:
-
-- Product design
-- Frontend engineering
-- Backend engineering
-- Database architecture
-- Cryptography
-- Authentication
-- Security controls
-- Testing
-- Responsive UI
-
-into a single full-stack application.
+The project combines product design, frontend engineering, backend engineering, database architecture, cryptography, authentication, security controls, testing, and responsive UI into a single full-stack application.
 
 ---
-
-## Built for secure sharing
 
 **Veil — Share sensitive information. Not your trust.**
