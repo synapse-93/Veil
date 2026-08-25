@@ -197,15 +197,34 @@ Veil is structured as a TypeScript monorepo.
 Veil/
 │
 ├── apps/
+│   │
 │   ├── frontend/
-│   │   └── React + TypeScript + Vite
+│   │   ├── React
+│   │   ├── TypeScript
+│   │   └── Vite
 │   │
 │   └── backend/
-│       └── Fastify + Prisma + PostgreSQL
+│       ├── Fastify
+│       ├── Prisma
+│       ├── PostgreSQL
+│       ├── Controllers
+│       ├── Services
+│       ├── Repositories
+│       ├── Plugins
+│       └── Validation
 │
 ├── packages/
+│   │
 │   └── shared/
-│       └── Shared types, validation and schemas
+│       ├── Types
+│       ├── Constants
+│       ├── Zod Schemas
+│       └── Shared Validation
 │
-└── cli/
-    └── Command-line client
+├── cli/
+│   └── Command-line client
+│
+└── tests/
+    ├── Unit
+    ├── Integration
+    └── E2E
