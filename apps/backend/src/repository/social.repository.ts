@@ -261,17 +261,18 @@ export class PrismaSocialRepository implements SocialRepository {
           OR: [{ senderId: userId }, { receiverId: userId }],
         },
         include: {
-          sender: { select: { id: true, username: true } },
-          receiver: { select: { id: true, username: true } },
+          sender: { select: { id: true, username: true, publicKey: true } as any },
+          receiver: { select: { id: true, username: true, publicKey: true } as any },
         },
       });
 
       const friends: FriendItem[] = [];
       for (const r of records) {
-        const other = r.senderId === userId ? r.receiver : r.sender;
+        const other: any = r.senderId === userId ? r.receiver : r.sender;
         friends.push({
-          id: other.id,
-          username: other.username,
+          id: String(other.id),
+          username: String(other.username),
+          publicKey: other.publicKey ? String(other.publicKey) : null,
           createdAt: r.updatedAt.toISOString(),
         });
       }
@@ -321,7 +322,7 @@ export class PrismaSocialRepository implements SocialRepository {
             include: {
               participants: {
                 include: {
-                  user: { select: { id: true, username: true } },
+                  user: { select: { id: true, username: true, publicKey: true } as any },
                 },
               },
               messages: {
@@ -379,6 +380,7 @@ export class PrismaSocialRepository implements SocialRepository {
           otherUser: {
             id: otherParticipant.user.id,
             username: otherParticipant.user.username,
+            publicKey: (otherParticipant.user as any).publicKey ?? null,
           },
           lastMessage: lastMessageItem,
           unreadCount,
@@ -569,11 +571,11 @@ export class InMemorySocialRepository implements SocialRepository {
   private readonly friendRequests = new Map<string, MemoryFriendReq>();
   private readonly conversations = new Map<string, MemoryConv>();
   private readonly messages = new Map<string, MemoryMsg>();
-  private readonly userLookup: (userId: string) => Promise<{ id: string; username: string } | null>;
+  private readonly userLookup: (userId: string) => Promise<{ id: string; username: string; publicKey?: string | null } | null>;
   private readonly storagePath: string;
 
   constructor(
-    userLookup?: (userId: string) => Promise<{ id: string; username: string } | null>,
+    userLookup?: (userId: string) => Promise<{ id: string; username: string; publicKey?: string | null } | null>,
     storageDir?: string,
   ) {
     this.userLookup = userLookup ?? (async () => null);
@@ -847,6 +849,7 @@ export class InMemorySocialRepository implements SocialRepository {
           friends.push({
             id: other.id,
             username: other.username,
+            publicKey: other.publicKey ?? null,
             createdAt: req.updatedAt.toISOString(),
           });
         }

@@ -8,6 +8,30 @@ export function registerUserControllers(
   userService: UserService,
   socialService?: SocialService,
 ) {
+  app.get("/users/:id/public-key", async (request: FastifyRequest, reply: FastifyReply) => {
+    const userPayload = requireAuth(request, reply);
+    if (!userPayload) return;
+
+    const { id } = request.params as { id: string };
+    if (!id) {
+      return reply.status(400).send({ error: "User ID is required" });
+    }
+
+    try {
+      const targetUser = await userService.getUserById(id);
+      if (!targetUser) {
+        return reply.status(404).send({ error: "User not found" });
+      }
+      return reply.send({
+        userId: targetUser.id,
+        username: targetUser.username,
+        publicKey: targetUser.publicKey ?? null,
+      });
+    } catch {
+      return reply.status(500).send({ error: "Failed to fetch user public key" });
+    }
+  });
+
   app.get("/users/search", async (request: FastifyRequest, reply: FastifyReply) => {
     const userPayload = requireAuth(request, reply);
     if (!userPayload) return;

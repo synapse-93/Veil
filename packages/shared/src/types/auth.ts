@@ -2,6 +2,7 @@ export type UserProfile = {
   id: string;
   username: string;
   isPublic: boolean;
+  publicKey?: string | null;
   createdAt: string;
 };
 
@@ -13,6 +14,7 @@ export type AuthResponse = {
 export type RegisterRequest = {
   username: string;
   password: string;
+  publicKey?: string;
 };
 
 export type LoginRequest = {
@@ -22,4 +24,8 @@ export type LoginRequest = {
 
 export type UpdatePrivacyRequest = {
   isPublic: boolean;
+};
+
+export type UpdatePublicKeyRequest = {
+  publicKey: string;
 };

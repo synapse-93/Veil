@@ -9,33 +9,36 @@ export type StoredUser = {
   username: string;
   passwordHash: string;
   isPublic: boolean;
+  publicKey?: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
 
 export interface UserRepository {
-  create(username: string, passwordHash: string, isPublic?: boolean): Promise<StoredUser>;
+  create(username: string, passwordHash: string, isPublic?: boolean, publicKey?: string): Promise<StoredUser>;
   findByUsername(username: string): Promise<StoredUser | null>;
   findById(id: string): Promise<StoredUser | null>;
   updatePrivacy(id: string, isPublic: boolean): Promise<StoredUser>;
+  updatePublicKey(id: string, publicKey: string): Promise<StoredUser>;
   searchUsers(
     query: string,
     excludeUserId: string,
     limit?: number,
-  ): Promise<Array<{ id: string; username: string; isPublic: boolean; createdAt: Date }>>;
+  ): Promise<Array<{ id: string; username: string; isPublic: boolean; publicKey?: string | null; createdAt: Date }>>;
 }
 
 export class PrismaUserRepository implements UserRepository {
   constructor(private readonly db: PrismaClient) {}
 
-  async create(username: string, passwordHash: string, isPublic = true): Promise<StoredUser> {
+  async create(username: string, passwordHash: string, isPublic = true, publicKey?: string): Promise<StoredUser> {
     try {
       const created = await (this.db.user as any).create({
-        data: { username, passwordHash, isPublic },
+        data: { username, passwordHash, isPublic, publicKey },
       });
       return {
         ...created,
         isPublic: created.isPublic ?? true,
+        publicKey: created.publicKey ?? null,
       };
     } catch (err) {
       throw new DatabaseError("Failed to create user.", { cause: err });
@@ -56,6 +59,7 @@ export class PrismaUserRepository implements UserRepository {
       return {
         ...user,
         isPublic: (user as any).isPublic ?? true,
+        publicKey: (user as any).publicKey ?? null,
       };
     } catch (err) {
       throw new DatabaseError("Failed to find user by username.", { cause: err });
@@ -69,6 +73,7 @@ export class PrismaUserRepository implements UserRepository {
       return {
         ...user,
         isPublic: (user as any).isPublic ?? true,
+        publicKey: (user as any).publicKey ?? null,
       };
     } catch (err) {
       throw new DatabaseError("Failed to find user by id.", { cause: err });
@@ -84,9 +89,26 @@ export class PrismaUserRepository implements UserRepository {
       return {
         ...user,
         isPublic: user.isPublic ?? true,
+        publicKey: user.publicKey ?? null,
       };
     } catch (err) {
       throw new DatabaseError("Failed to update user privacy.", { cause: err });
+    }
+  }
+
+  async updatePublicKey(id: string, publicKey: string): Promise<StoredUser> {
+    try {
+      const user = await (this.db.user as any).update({
+        where: { id },
+        data: { publicKey },
+      });
+      return {
+        ...user,
+        isPublic: user.isPublic ?? true,
+        publicKey: user.publicKey ?? null,
+      };
+    } catch (err) {
+      throw new DatabaseError("Failed to update user public key.", { cause: err });
     }
   }
 
@@ -94,7 +116,7 @@ export class PrismaUserRepository implements UserRepository {
     query: string,
     excludeUserId: string,
     limit = 10,
-  ): Promise<Array<{ id: string; username: string; isPublic: boolean; createdAt: Date }>> {
+  ): Promise<Array<{ id: string; username: string; isPublic: boolean; publicKey?: string | null; createdAt: Date }>> {
     try {
       const records = await this.db.user.findMany({
         where: {
@@ -108,13 +130,15 @@ export class PrismaUserRepository implements UserRepository {
           id: true,
           username: true,
           createdAt: true,
-        },
+          publicKey: true,
+        } as any,
         take: limit,
       });
       return records.map((r: any) => ({
         id: r.id,
         username: r.username,
         isPublic: r.isPublic ?? true,
+        publicKey: r.publicKey ?? null,
         createdAt: r.createdAt,
       }));
     } catch (err) {
@@ -204,7 +228,7 @@ export class InMemoryUserRepository implements UserRepository {
     }
   }
 
-  async create(username: string, passwordHash: string, isPublic = true): Promise<StoredUser> {
+  async create(username: string, passwordHash: string, isPublic = true, publicKey?: string): Promise<StoredUser> {
     const id = (await import("node:crypto")).randomUUID();
     const now = new Date();
     const user: StoredUser = {
@@ -212,6 +236,7 @@ export class InMemoryUserRepository implements UserRepository {
       username,
       passwordHash,
       isPublic,
+      publicKey: publicKey ?? null,
       createdAt: now,
       updatedAt: now,
     };
@@ -224,7 +249,7 @@ export class InMemoryUserRepository implements UserRepository {
     const lower = username.toLowerCase();
     for (const user of this.users.values()) {
       if (user.username.toLowerCase() === lower) {
-        return { ...user, isPublic: user.isPublic ?? true };
+        return { ...user, isPublic: user.isPublic ?? true, publicKey: user.publicKey ?? null };
       }
     }
     return null;
@@ -232,7 +257,7 @@ export class InMemoryUserRepository implements UserRepository {
 
   async findById(id: string): Promise<StoredUser | null> {
     const user = this.users.get(id);
-    return user ? { ...user, isPublic: user.isPublic ?? true } : null;
+    return user ? { ...user, isPublic: user.isPublic ?? true, publicKey: user.publicKey ?? null } : null;
   }
 
   async updatePrivacy(id: string, isPublic: boolean): Promise<StoredUser> {
@@ -250,19 +275,35 @@ export class InMemoryUserRepository implements UserRepository {
     return { ...updated };
   }
 
+  async updatePublicKey(id: string, publicKey: string): Promise<StoredUser> {
+    const user = this.users.get(id);
+    if (!user) {
+      throw new DatabaseError(`User ${id} not found.`);
+    }
+    const updated: StoredUser = {
+      ...user,
+      publicKey,
+      updatedAt: new Date(),
+    };
+    this.users.set(id, updated);
+    this.save();
+    return { ...updated };
+  }
+
   async searchUsers(
     query: string,
     excludeUserId: string,
     limit = 10,
-  ): Promise<Array<{ id: string; username: string; isPublic: boolean; createdAt: Date }>> {
+  ): Promise<Array<{ id: string; username: string; isPublic: boolean; publicKey?: string | null; createdAt: Date }>> {
     const q = query.toLowerCase();
-    const results: Array<{ id: string; username: string; isPublic: boolean; createdAt: Date }> = [];
+    const results: Array<{ id: string; username: string; isPublic: boolean; publicKey?: string | null; createdAt: Date }> = [];
     for (const user of this.users.values()) {
       if (user.id !== excludeUserId && user.username.toLowerCase().includes(q)) {
         results.push({
           id: user.id,
           username: user.username,
           isPublic: user.isPublic ?? true,
+          publicKey: user.publicKey ?? null,
           createdAt: user.createdAt,
         });
         if (results.length >= limit) break;

@@ -16,6 +16,7 @@ export type FriendItem = {
   id: string;
   username: string;
   conversationId?: string;
+  publicKey?: string | null;
   createdAt: string;
 };
 
@@ -45,6 +46,7 @@ export type ConversationItem = {
   otherUser: {
     id: string;
     username: string;
+    publicKey?: string | null;
   };
   lastMessage?: MessageItem | null;
   unreadCount: number;
@@ -55,6 +57,7 @@ export type UserSearchResult = {
   username: string;
   isPublic: boolean;
   isFriend?: boolean;
+  publicKey?: string | null;
   requestStatus?: FriendRequestStatus | null;
   createdAt: string;
 };

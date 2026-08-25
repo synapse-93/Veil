@@ -9,7 +9,8 @@ export class UserService {
     username: string,
     password: string,
     isPublic = true,
-  ): Promise<{ user: { id: string; username: string; isPublic: boolean; createdAt: string }; token: string }> {
+    publicKey?: string,
+  ): Promise<{ user: { id: string; username: string; isPublic: boolean; publicKey?: string | null; createdAt: string }; token: string }> {
     const cleanUsername = username.trim();
     const existing = await this.userRepo.findByUsername(cleanUsername);
     if (existing) {
@@ -17,7 +18,7 @@ export class UserService {
     }
 
     const passwordHash = hashPassword(password);
-    const created = await this.userRepo.create(cleanUsername, passwordHash, isPublic);
+    const created = await this.userRepo.create(cleanUsername, passwordHash, isPublic, publicKey);
     const token = createSessionToken(created.id, created.username);
 
     return {
@@ -25,6 +26,7 @@ export class UserService {
         id: created.id,
         username: created.username,
         isPublic: created.isPublic,
+        publicKey: created.publicKey ?? null,
         createdAt: created.createdAt.toISOString(),
       },
       token,
@@ -34,7 +36,7 @@ export class UserService {
   async login(
     username: string,
     password: string,
-  ): Promise<{ user: { id: string; username: string; isPublic: boolean; createdAt: string }; token: string }> {
+  ): Promise<{ user: { id: string; username: string; isPublic: boolean; publicKey?: string | null; createdAt: string }; token: string }> {
     const cleanUsername = username.trim();
     const user = await this.userRepo.findByUsername(cleanUsername);
     if (!user) {
@@ -53,6 +55,7 @@ export class UserService {
         id: user.id,
         username: user.username,
         isPublic: user.isPublic,
+        publicKey: user.publicKey ?? null,
         createdAt: user.createdAt.toISOString(),
       },
       token,
@@ -69,6 +72,10 @@ export class UserService {
 
   async updatePrivacy(userId: string, isPublic: boolean): Promise<StoredUser> {
     return this.userRepo.updatePrivacy(userId, isPublic);
+  }
+
+  async updatePublicKey(userId: string, publicKey: string): Promise<StoredUser> {
+    return this.userRepo.updatePublicKey(userId, publicKey);
   }
 
   async getOrCreateSessionUser(userId: string, username: string): Promise<StoredUser> {
@@ -88,6 +95,7 @@ export class UserService {
       id: r.id,
       username: r.username,
       isPublic: r.isPublic,
+      publicKey: r.publicKey ?? null,
       createdAt: r.createdAt.toISOString(),
     }));
   }

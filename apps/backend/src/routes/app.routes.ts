@@ -50,7 +50,7 @@ export async function registerAllRoutes(app: FastifyInstance): Promise<void> {
     ? new PrismaSocialRepository(prismaClient)
     : new InMemorySocialRepository(async (userId) => {
         const u = await userRepo.findById(userId);
-        return u ? { id: u.id, username: u.username } : null;
+        return u ? { id: u.id, username: u.username, publicKey: u.publicKey } : null;
       });
 
   const capsuleService = new CapsuleService(capsuleRepo);

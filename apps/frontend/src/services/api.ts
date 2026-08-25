@@ -314,6 +314,34 @@ export async function updatePrivacy(
   return rawBody as { user: UserProfile };
 }
 
+export async function updatePublicKey(
+  publicKey: string,
+  options: ClientOptions = {},
+): Promise<{ user: UserProfile }> {
+  const rawBody = await apiFetch(
+    "/auth/me/public-key",
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ publicKey }),
+    },
+    options,
+  );
+  return rawBody as { user: UserProfile };
+}
+
+export async function getUserPublicKey(
+  userId: string,
+  options: ClientOptions = {},
+): Promise<{ userId: string; username: string; publicKey?: string | null }> {
+  const rawBody = await apiFetch(
+    `/users/${encodeURIComponent(userId)}/public-key`,
+    { method: "GET" },
+    options,
+  );
+  return rawBody as { userId: string; username: string; publicKey?: string | null };
+}
+
 export async function logoutUser(
   options: ClientOptions = {},
 ): Promise<{ success: boolean }> {

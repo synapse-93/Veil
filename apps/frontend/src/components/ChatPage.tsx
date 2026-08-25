@@ -15,6 +15,7 @@ import {
   createCapsule,
   consumeCapsule,
   revokeCapsule,
+  getUserPublicKey,
 } from "../services/api.js";
 import {
   encryptForShare,
@@ -22,6 +23,10 @@ import {
   decodeFragment,
   verifyFragmentPassword,
 } from "../crypto/zero-knowledge.js";
+import {
+  encryptFragmentForE2EE,
+  decryptFragmentFromE2EE,
+} from "../crypto/e2ee.js";
 import type {
   FriendItem,
   FriendRequestItem,
@@ -104,6 +109,7 @@ export function ChatPage() {
   const [copiedCapsuleMsgId, setCopiedCapsuleMsgId] = useState<string | null>(null);
   const [revokingCapsuleId, setRevokingCapsuleId] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(Date.now());
+  const [decryptedFragments, setDecryptedFragments] = useState<Record<string, string>>({});
 
   const messageViewportRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
@@ -126,6 +132,7 @@ export function ChatPage() {
     setIsCapsuleModalOpen(false);
     setCopiedNotification(false);
     setRevokingCapsuleId(null);
+    setDecryptedFragments({});
   }, [user?.id]);
 
   // ---------------------------------------------------------------------------
@@ -198,6 +205,25 @@ export function ChatPage() {
     const interval = setInterval(() => loadMessages(activeConversationId), 3000);
     return () => clearInterval(interval);
   }, [user, activeConversationId]);
+
+  useEffect(() => {
+    if (!user || !messages.length) return;
+    for (const msg of messages) {
+      if (
+        msg.type === "CAPSULE" &&
+        msg.shareFragment?.startsWith("e2ee:v1:") &&
+        !decryptedFragments[msg.id]
+      ) {
+        decryptFragmentFromE2EE(msg.shareFragment, user.id)
+          .then((plainFragment) => {
+            setDecryptedFragments((prev) => ({ ...prev, [msg.id]: plainFragment }));
+          })
+          .catch((err) => {
+            console.warn(`[E2EE] Could not decrypt capsule message ${msg.id}:`, err);
+          });
+      }
+    }
+  }, [user, messages, decryptedFragments]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -415,15 +441,40 @@ export function ChatPage() {
         burnAfterRead,
       });
 
-      // Post capsule metadata and the raw share fragment to the conversation.
-      // The visible message still carries the full share URL for UX, but the fragment
-      // lives in dedicated message metadata so the recipient can auto-fill it.
+      // Find recipient's public key from the active conversation
+      const activeConv = conversations.find((c) => c.id === activeConversationId);
+      let recipientPubKey = activeConv?.otherUser?.publicKey;
+      if (!recipientPubKey && activeConv?.otherUser?.id) {
+        try {
+          const res = await getUserPublicKey(activeConv.otherUser.id);
+          recipientPubKey = res.publicKey;
+        } catch {
+          // fallback to standard fragment
+        }
+      }
+
+      // If recipient public key is available, encrypt fragment with E2EE
+      let payloadFragment = encrypted.fragment;
+      if (recipientPubKey && user) {
+        try {
+          payloadFragment = await encryptFragmentForE2EE(
+            encrypted.fragment,
+            recipientPubKey,
+            user.id,
+          );
+        } catch (e2eeErr) {
+          console.warn("[E2EE] Could not encrypt fragment with recipient public key:", e2eeErr);
+        }
+      }
+
+      // Zero-Knowledge message: Content only has the clean base URL.
+      // The fragment is only transmitted in encrypted E2EE form in shareFragment.
       const expiresAt = new Date(Date.now() + ttlSeconds * 1000).toISOString();
-      const shareUrl = `${window.location.origin}/share/${encodeURIComponent(capsule.metadata.id)}#${encrypted.fragment}`;
+      const baseShareUrl = `${window.location.origin}/share/${encodeURIComponent(capsule.metadata.id)}`;
       const message = await sendMessage(activeConversationId, {
         type: "CAPSULE",
-        content: `Sealed Capsule (${capsuleRecipe})\n\n🔒 Secret Link: ${shareUrl}`,
-        shareFragment: encrypted.fragment,
+        content: `Sealed Capsule (${capsuleRecipe})\n\n🔒 Secret Link: ${baseShareUrl}`,
+        shareFragment: payloadFragment,
         capsuleId: capsule.metadata.id,
         recipe: capsuleRecipe,
         expiresAt,
@@ -431,6 +482,12 @@ export function ChatPage() {
         burnAfterRead,
         requiresPassword,
       });
+
+      // Cache our own decrypted fragment locally
+      setDecryptedFragments((prev) => ({
+        ...prev,
+        [message.id]: encrypted.fragment,
+      }));
 
       setMessages((prev) => [...prev, message]);
       setIsCapsuleModalOpen(false);
@@ -445,7 +502,10 @@ export function ChatPage() {
 
   const getCapsuleShareUrl = (msg: MessageItem): string => {
     if (!msg.capsuleId) return "";
-    const fragment = (msg.shareFragment && msg.shareFragment.trim()) || "";
+    let fragment = (msg.shareFragment && msg.shareFragment.trim()) || "";
+    if (fragment.startsWith("e2ee:v1:")) {
+      fragment = decryptedFragments[msg.id] || "";
+    }
     if (fragment) {
       return `${window.location.origin}/share/${encodeURIComponent(msg.capsuleId)}#${fragment}`;
     }
@@ -462,12 +522,16 @@ export function ChatPage() {
     setTimeout(() => setCopiedCapsuleMsgId(null), 2000);
   };
 
-  const renderMessageContent = (text: string, shareFragment?: string | null) => {
+  const renderMessageContent = (text: string, shareFragment?: string | null, msgId?: string) => {
     let formattedText = text;
-    if (shareFragment) {
+    let fragment = (shareFragment && shareFragment.trim()) || "";
+    if (fragment.startsWith("e2ee:v1:") && msgId) {
+      fragment = decryptedFragments[msgId] || "";
+    }
+    if (fragment) {
       formattedText = formattedText.replace(
         /(https?:\/\/\S*\/share\/[A-Za-z0-9_-]+)(?!#)/g,
-        `$1#${shareFragment}`,
+        `$1#${fragment}`,
       );
     }
     const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -491,13 +555,27 @@ export function ChatPage() {
     });
   };
 
-  const handleOpenCapsuleViewer = (msg: MessageItem) => {
+  const handleOpenCapsuleViewer = async (msg: MessageItem) => {
     setInspectingCapsuleMessage(msg);
-    const shareUrl = getCapsuleShareUrl(msg);
-    const fragmentFromMessage = (msg.shareFragment && msg.shareFragment.trim())
-      || (msg.content.match(/https?:\/\/[^\s]+#([^\s]+)/)?.[1] ?? "");
-    setDecryptingKey(fragmentFromMessage || shareUrl);
-    setAutoFilledShareFragment(Boolean(fragmentFromMessage));
+    let fragment = (msg.shareFragment && msg.shareFragment.trim()) || "";
+    if (fragment.startsWith("e2ee:v1:")) {
+      fragment = decryptedFragments[msg.id] || "";
+      if (!fragment && user) {
+        try {
+          fragment = await decryptFragmentFromE2EE(msg.shareFragment!, user.id);
+          setDecryptedFragments((prev) => ({ ...prev, [msg.id]: fragment }));
+        } catch {
+          // unable to decrypt with local key
+        }
+      }
+    }
+    const shareUrl = msg.capsuleId
+      ? fragment
+        ? `${window.location.origin}/share/${encodeURIComponent(msg.capsuleId)}#${fragment}`
+        : `${window.location.origin}/share/${encodeURIComponent(msg.capsuleId)}`
+      : "";
+    setDecryptingKey(fragment || shareUrl);
+    setAutoFilledShareFragment(Boolean(fragment));
     setDecryptingPassword("");
     setDecryptedPlaintext(null);
     setDecryptError(null);
@@ -524,13 +602,22 @@ export function ChatPage() {
     if (e) e.preventDefault();
     if (!inspectingCapsuleMessage || !inspectingCapsuleMessage.capsuleId) return;
 
-    const keyFragment = decryptingKey.trim().includes("#")
+    let keyFragment = decryptingKey.trim().includes("#")
       ? decryptingKey.trim().split("#").pop()?.trim()
       : decryptingKey.trim();
 
     if (!keyFragment) {
       setDecryptError("Please enter the decryption key or share link fragment.");
       return;
+    }
+
+    if (keyFragment.startsWith("e2ee:v1:") && user) {
+      try {
+        keyFragment = await decryptFragmentFromE2EE(keyFragment, user.id);
+      } catch {
+        setDecryptError("Failed to decrypt E2EE capsule envelope with your private key.");
+        return;
+      }
     }
 
     setDecryptLoading(true);
@@ -1316,7 +1403,7 @@ export function ChatPage() {
                           }`}
                           style={!isMe ? { color: "var(--color-veil-ink)" } : undefined}
                         >
-                          {renderMessageContent(msg.content, msg.shareFragment)}
+                          {renderMessageContent(msg.content, msg.shareFragment, msg.id)}
                         </div>
                         <span className="text-[10px] mt-1 px-1 text-muted" style={{ color: "var(--color-veil-muted)" }}>
                           {new Date(msg.createdAt).toLocaleTimeString([], {

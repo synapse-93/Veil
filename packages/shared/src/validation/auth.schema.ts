@@ -11,6 +11,7 @@ export const registerSchema = z.object({
     .string()
     .min(6, "Password must be at least 6 characters")
     .max(128, "Password must be at most 128 characters"),
+  publicKey: z.string().trim().min(1).max(2048).optional(),
 });
 
 export const loginSchema = z.object({
@@ -20,4 +21,8 @@ export const loginSchema = z.object({
 
 export const updatePrivacySchema = z.object({
   isPublic: z.boolean(),
+});
+
+export const updatePublicKeySchema = z.object({
+  publicKey: z.string().trim().min(1, "Public key is required").max(4096),
 });

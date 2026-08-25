@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { registerSchema, loginSchema, updatePrivacySchema } from "@secureshare/shared";
+import { registerSchema, loginSchema, updatePrivacySchema, updatePublicKeySchema } from "@secureshare/shared";
 import type { UserService } from "../services/user.service.js";
 import { ConflictError, UnauthorizedError, DatabaseError } from "../errors.js";
 import { requireAuth } from "../plugins/auth.js";
@@ -16,7 +16,12 @@ export function registerAuthControllers(app: FastifyInstance, userService: UserS
     }
 
     try {
-      const result = await userService.register(parsed.data.username, parsed.data.password);
+      const result = await userService.register(
+        parsed.data.username,
+        parsed.data.password,
+        true,
+        parsed.data.publicKey,
+      );
       return reply.status(201).send(result);
     } catch (err) {
       if (err instanceof ConflictError) {
@@ -63,6 +68,7 @@ export function registerAuthControllers(app: FastifyInstance, userService: UserS
           id: user.id,
           username: user.username,
           isPublic: user.isPublic ?? true,
+          publicKey: user.publicKey ?? null,
           createdAt: user.createdAt.toISOString(),
         },
       });
@@ -90,11 +96,40 @@ export function registerAuthControllers(app: FastifyInstance, userService: UserS
           id: updated.id,
           username: updated.username,
           isPublic: updated.isPublic ?? true,
+          publicKey: updated.publicKey ?? null,
           createdAt: updated.createdAt.toISOString(),
         },
       });
     } catch (err) {
       return reply.status(500).send({ error: "Failed to update privacy setting" });
+    }
+  });
+
+  app.put("/auth/me/public-key", async (request: FastifyRequest, reply: FastifyReply) => {
+    const userPayload = requireAuth(request, reply);
+    if (!userPayload) return;
+
+    const parsed = updatePublicKeySchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({
+        error: "Invalid public key configuration",
+        details: parsed.error.issues.map((i) => i.message),
+      });
+    }
+
+    try {
+      const updated = await userService.updatePublicKey(userPayload.userId, parsed.data.publicKey);
+      return reply.send({
+        user: {
+          id: updated.id,
+          username: updated.username,
+          isPublic: updated.isPublic ?? true,
+          publicKey: updated.publicKey ?? null,
+          createdAt: updated.createdAt.toISOString(),
+        },
+      });
+    } catch (err) {
+      return reply.status(500).send({ error: "Failed to update public key" });
     }
   });
 

@@ -7,8 +7,10 @@ import {
   logoutUser,
   registerUser,
   updatePrivacy as apiUpdatePrivacy,
+  updatePublicKey,
   getAuthToken,
 } from "../services/api.js";
+import { getOrCreateUserE2EEKeyPair } from "../crypto/e2ee.js";
 import { clearStorage as clearHistoryStorage } from "./useHistory.js";
 
 type AuthContextType = {
@@ -42,6 +44,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAuthModalMode("login");
   };
 
+  const ensureUserE2EESynced = async (profile: UserProfile): Promise<UserProfile> => {
+    try {
+      const { publicKeyStr } = await getOrCreateUserE2EEKeyPair(profile.id);
+      if (profile.publicKey !== publicKeyStr) {
+        const { user: updatedProfile } = await updatePublicKey(publicKeyStr);
+        return updatedProfile;
+      }
+    } catch (err) {
+      console.warn("[useAuth] Failed to sync E2EE public key:", err);
+    }
+    return profile;
+  };
+
   const refreshUser = async () => {
     const token = getAuthToken();
     if (!token) {
@@ -51,7 +66,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       const { user: profile } = await getCurrentUser();
-      setUser(profile);
+      const synced = await ensureUserE2EESynced(profile);
+      setUser(synced);
     } catch {
       clearClientSession();
     } finally {
@@ -66,14 +82,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (u: string, p: string) => {
     setUser(null);
     const res = await loginUser({ username: u, password: p });
-    setUser(res.user);
+    const synced = await ensureUserE2EESynced(res.user);
+    setUser(synced);
     setIsAuthModalOpen(false);
   };
 
   const register = async (u: string, p: string) => {
     setUser(null);
     const res = await registerUser({ username: u, password: p });
-    setUser(res.user);
+    const synced = await ensureUserE2EESynced(res.user);
+    setUser(synced);
     setIsAuthModalOpen(false);
   };
 

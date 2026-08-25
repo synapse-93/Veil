@@ -13,7 +13,7 @@ export const sendMessageSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("CAPSULE"),
     content: z.string().default(""),
-    shareFragment: z.string().trim().min(1, "Share fragment is required").max(2048).optional(),
+    shareFragment: z.string().trim().min(1, "Share fragment is required").max(8192).optional(),
     capsuleId: z.string().min(1, "Capsule ID is required"),
     recipe: securityRecipeSchema,
     expiresAt: z.string().datetime(),

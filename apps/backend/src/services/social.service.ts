@@ -30,6 +30,7 @@ export class SocialService {
         id: u.id,
         username: u.username,
         isPublic: u.isPublic,
+        publicKey: u.publicKey ?? null,
         isFriend: rel?.status === "ACCEPTED",
         requestStatus: rel?.status || null,
         createdAt: u.createdAt.toISOString(),
@@ -77,6 +78,7 @@ export class SocialService {
         otherUser: {
           id: targetUser.id,
           username: targetUser.username,
+          publicKey: targetUser.publicKey ?? null,
         },
         unreadCount: 0,
       };
