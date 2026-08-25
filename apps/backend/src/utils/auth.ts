@@ -16,8 +16,8 @@ export function verifyPassword(password: string, storedHash: string): boolean {
     return false;
   }
   
-  // 1. Direct plaintext match (for development / legacy seed compatibility)
-  if (storedHash === password) {
+  // 1. Direct plaintext match (strictly disabled in production, dev fallback only)
+  if (env.nodeEnv !== "production" && storedHash === password) {
     return true;
   }
 

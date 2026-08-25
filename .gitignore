@@ -15,3 +15,5 @@ Thumbs.db
 .cache/
 .prisma/
 apps/backend/generated/
+.veil_data/
+apps/backend/.veil_data/

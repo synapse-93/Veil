@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { env } from "../config/env.js";
 import { registerCapsuleControllers } from "../controllers/capsule.controller.js";
 import { getPrismaClient } from "../db/prisma.js";
 import {
@@ -11,6 +12,13 @@ import { CleanupService } from "../services/cleanup.service.js";
 
 export async function capsuleRoutes(app: FastifyInstance): Promise<void> {
   const prismaClient = getPrismaClient();
+
+  if (env.nodeEnv === "production" && !prismaClient) {
+    throw new Error(
+      "DATABASE_URL is required and PrismaClient must be initialized in production. Refusing fallback to in-memory storage.",
+    );
+  }
+
   const repo: CapsuleRepository = prismaClient
     ? new PrismaCapsuleRepository(prismaClient)
     : new InMemoryCapsuleRepository();
