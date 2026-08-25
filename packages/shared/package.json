@@ -5,32 +5,32 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
     "./constants/policies": {
-      "types": "./src/constants/policies.ts",
+      "types": "./dist/constants/policies.d.ts",
       "import": "./dist/constants/policies.js",
       "default": "./dist/constants/policies.js"
     },
     "./errors": {
-      "types": "./src/errors.ts",
+      "types": "./dist/errors.d.ts",
       "import": "./dist/errors.js",
       "default": "./dist/errors.js"
     },
     "./share/link": {
-      "types": "./src/share/link.ts",
+      "types": "./dist/share/link.d.ts",
       "import": "./dist/share/link.js",
       "default": "./dist/share/link.js"
     },
     "./types/capsule": {
-      "types": "./src/types/capsule.ts",
+      "types": "./dist/types/capsule.d.ts",
       "import": "./dist/types/capsule.js",
       "default": "./dist/types/capsule.js"
     },
     "./validation/capsule.schema": {
-      "types": "./src/validation/capsule.schema.ts",
+      "types": "./dist/validation/capsule.schema.d.ts",
       "import": "./dist/validation/capsule.schema.js",
       "default": "./dist/validation/capsule.schema.js"
     }
