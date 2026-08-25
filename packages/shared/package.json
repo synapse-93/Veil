@@ -1,0 +1,23 @@
+{
+  "name": "@secureshare/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./constants/policies": "./src/constants/policies.ts",
+    "./errors": "./src/errors.ts",
+    "./share/link": "./src/share/link.ts",
+    "./types/capsule": "./src/types/capsule.ts",
+    "./validation/capsule.schema": "./src/validation/capsule.schema.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  }
+}

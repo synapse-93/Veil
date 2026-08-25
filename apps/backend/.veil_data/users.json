@@ -1,0 +1,74 @@
+[
+  {
+    "id": "synapse_2_demo_id",
+    "username": "synapse_2",
+    "passwordHash": "scrypt:f27cd0c22de3688e4d643351eac21d16:e88509c581b1f02dca100e522536439546a621dc71286a0b17f9ca2c1e729a70c498a9cab4261a0ba91822d835489f957ce92d3573d6963be9ca8dd3e26731fe",
+    "isPublic": true,
+    "createdAt": "2026-08-25T11:53:35.243Z",
+    "updatedAt": "2026-08-25T11:53:35.243Z"
+  },
+  {
+    "id": "a15a82e4-7a2c-4079-a7cc-7606ac90fdeb",
+    "username": "alice123",
+    "passwordHash": "scrypt:364d41d932d86672608c767192ae4524:0d74728d7ac01f8b9f439f31e3b763f9232c666bac6ad394ecd52abe6760ab1ecf4960bcc39825a65345fad5add3a7542eb9ef52585554346e74186712eb0dfe",
+    "isPublic": true,
+    "createdAt": "2026-08-25T12:03:07.268Z",
+    "updatedAt": "2026-08-25T12:03:07.268Z"
+  },
+  {
+    "id": "3df7cb28-41b4-4fbe-8e8e-f87a51c9963a",
+    "username": "test",
+    "passwordHash": "scrypt:76d99f3e2834517f413530eb71e12d6d:64a5b7ad5b6943d8e1958e57c40ed6050c9340eab5f76e2faa8d75cff601ef5a9eb20b16c2cb9e84447d3caa9ea70329a24c01b9a1f6d0ddc364afb13e173553",
+    "isPublic": true,
+    "createdAt": "2026-08-25T12:08:44.631Z",
+    "updatedAt": "2026-08-25T12:08:44.631Z"
+  },
+  {
+    "id": "8163ed7f-8071-47bb-9667-3de4b910109b",
+    "username": "fresh_a",
+    "passwordHash": "scrypt:845de8775488516c7ba5d442de799db5:5ef780938a9ca8acf7eb51ef22c790be574bd1675b66d15ee39763504865d7fbef9ebeeb401c1c82b89bf70bbc101a134866bac19aaeb179aa8d3444ce3f35df",
+    "isPublic": true,
+    "createdAt": "2026-08-25T12:14:12.595Z",
+    "updatedAt": "2026-08-25T12:14:12.595Z"
+  },
+  {
+    "id": "b8be14ec-ccf8-4ef5-8bdd-65f92bc2ed57",
+    "username": "fresh_b",
+    "passwordHash": "scrypt:e2589e222510a5da95edc06629ee536a:5ba9dc144b41afb7ece9de2bd053f4ff6bba43876325d080a3d564fc36c8a7e38caff58c7f87efdb532dd69486cd6e7f235afbd0c28ea8a9f78761c9a041a875",
+    "isPublic": true,
+    "createdAt": "2026-08-25T12:14:12.638Z",
+    "updatedAt": "2026-08-25T12:14:12.638Z"
+  },
+  {
+    "id": "2314f167-1317-45d9-9951-8fb85bf99762",
+    "username": "fresh_d",
+    "passwordHash": "scrypt:a952e92608ab3067546b188d568c51d7:f29c1ee55cb42b001e295e477a0d22d921b29f3cab8f413296cd2cd04740d2973d98e4b4980c4d9044acdff3e54a3a1f350e0f864b4b04a8aaafc6cb72d23f08",
+    "isPublic": true,
+    "createdAt": "2026-08-25T12:16:26.124Z",
+    "updatedAt": "2026-08-25T12:16:26.124Z"
+  },
+  {
+    "id": "4aba866b-10bd-4c6e-850b-7b76080f36df",
+    "username": "qa_user_a_20260825",
+    "passwordHash": "scrypt:490a9d3056e66594a9d6f378bab30c8d:298485052e484154d9eadb08a0a730303d0502d82fe7602b6a74f98009b892d464bf964621f824d46f9f6d1c18e0d37a223a4abcb00348bdd965d124eff6146c",
+    "isPublic": true,
+    "createdAt": "2026-08-25T12:24:19.503Z",
+    "updatedAt": "2026-08-25T12:24:19.503Z"
+  },
+  {
+    "id": "123b851b-a94d-479e-950d-496fa956c624",
+    "username": "qa_user_b_20260825",
+    "passwordHash": "scrypt:244eb782c3489d5cda76777b948f51d5:ca142604d598c39e1323f904228fe8d52768c050884c63dae6bc8813c748cee14d9406901aeffe7bd638983314b83c26f59eb5d733a07ff6f0b00dce7e69004b",
+    "isPublic": true,
+    "createdAt": "2026-08-25T12:24:19.545Z",
+    "updatedAt": "2026-08-25T12:24:19.545Z"
+  },
+  {
+    "id": "229f62d4-96ed-48f9-abef-a4545a069e3b",
+    "username": "test1",
+    "passwordHash": "scrypt:cd97b6fe7cafd309328827e4b3291c11:c559c6fa06f272653bcad7628fd961bbf23a4456da295cbe062475789c3ae7ec01e58348f368845f2ba2f018c07d0fdc47bdebe839a45c7f3b74d65bd21048e7",
+    "isPublic": true,
+    "createdAt": "2026-08-25T12:29:21.440Z",
+    "updatedAt": "2026-08-25T12:29:21.440Z"
+  }
+]

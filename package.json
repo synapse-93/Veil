@@ -1,0 +1,32 @@
+{
+  "name": "secureshare",
+  "private": true,
+  "version": "0.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "cli"
+  ],
+  "scripts": {
+    "dev": "npm run build:frontend && tsx apps/backend/src/server.ts",
+    "start": "tsx apps/backend/src/server.ts",
+    "build:frontend": "npm run --workspace=@secureshare/frontend build",
+    "build:backend": "npm run --workspace=@secureshare/backend build",
+    "build": "npm run build:frontend && npm run build:backend",
+    "typecheck": "tsc -p packages/shared/tsconfig.json --noEmit && tsc -p apps/frontend/tsconfig.json --noEmit && tsc -p apps/backend/tsconfig.json --noEmit && tsc -p cli/tsconfig.json --noEmit",
+    "lint": "npm run typecheck",
+    "test:unit": "vitest run tests/unit --passWithNoTests",
+    "test:integration": "vitest run tests/integration --passWithNoTests",
+    "test:e2e": "playwright test tests/e2e --pass-with-no-tests"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "jsdom": "^30.0.1",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "lucide-react": "^1.34.0"
+  }
+}

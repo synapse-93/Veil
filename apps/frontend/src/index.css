@@ -1,0 +1,545 @@
+@import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Inter:wght@300;400;500;600;700&display=swap");
+
+/* Class-based dark mode — add .dark to <html> */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ── Veil / Ember Design Tokens ─────────────────────────────────────────── */
+
+@theme {
+  /* Palette Light */
+  --color-veil-bg:         #FAF7F2;
+  --color-veil-surface:    rgba(255, 255, 255, 0.7);
+  --color-veil-subtle:     #F3EEE6;
+  --color-veil-border:     rgba(190, 165, 140, 0.35);
+  --color-veil-ink:        #1C1612;
+  --color-veil-muted:      #786D63;
+  --color-veil-ember:      #C95D26;
+  --color-veil-ember-hover:#DE6B2E;
+  --color-veil-ember-dim:  rgba(201, 93, 38, 0.12);
+  --color-veil-danger:     #B91C1C;
+  --color-veil-danger-dim: #FEE2E2;
+  --color-veil-success:    #15803D;
+  --color-veil-success-dim:#DCFCE7;
+
+  /* Typography */
+  --font-serif: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-sans:  "Inter", system-ui, -apple-system, sans-serif;
+}
+
+/* Dark mode custom properties */
+.dark {
+  --color-veil-bg:         #13110E;
+  --color-veil-surface:    rgba(26, 22, 18, 0.75);
+  --color-veil-subtle:     #211B16;
+  --color-veil-border:     rgba(224, 115, 46, 0.18);
+  --color-veil-ink:        #F5EFE6;
+  --color-veil-muted:      #A39485;
+  --color-veil-ember:      #E0732E;
+  --color-veil-ember-hover:#EE833E;
+  --color-veil-ember-dim:  rgba(224, 115, 46, 0.16);
+  --color-veil-danger:     #EF4444;
+  --color-veil-danger-dim: rgba(239, 68, 68, 0.15);
+  --color-veil-success:    #22C55E;
+  --color-veil-success-dim:rgba(34, 197, 94, 0.15);
+}
+
+/* ── Base ───────────────────────────────────────────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #FAF7F2;
+  background-image:
+    radial-gradient(ellipse 65% 50% at 20% 15%, rgba(246, 177, 122, 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 45% at 85% 25%, rgba(224, 115, 46, 0.14) 0%, transparent 65%),
+    radial-gradient(circle 450px at 75% 85%, rgba(140, 172, 132, 0.12) 0%, transparent 70%),
+    linear-gradient(180deg, #FBF8F4 0%, #FAF7F2 45%, #F4ECE1 100%);
+  background-attachment: fixed;
+  color: var(--color-veil-ink);
+  font-family: var(--font-sans);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  min-height: 100vh;
+}
+
+.dark body {
+  background-color: #12100D;
+  background-image:
+    radial-gradient(ellipse 70% 55% at 20% 15%, rgba(224, 115, 46, 0.16) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 45% at 85% 30%, rgba(192, 86, 33, 0.14) 0%, transparent 65%),
+    radial-gradient(circle 500px at 70% 85%, rgba(56, 82, 53, 0.13) 0%, transparent 70%),
+    linear-gradient(180deg, #15120E 0%, #12100D 50%, #0E0C09 100%);
+}
+
+/* ── Atmospheric Bokeh Background Elements ────────────────────────────── */
+
+.bokeh-orb-1 {
+  position: absolute;
+  width: 540px;
+  height: 540px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(248, 167, 121, 0.28) 0%, rgba(224, 115, 46, 0.12) 40%, transparent 70%);
+  filter: blur(75px);
+  pointer-events: none;
+  z-index: 0;
+  animation: ember-float 18s ease-in-out infinite alternate;
+}
+
+.dark .bokeh-orb-1 {
+  background: radial-gradient(circle, rgba(224, 115, 46, 0.2) 0%, rgba(180, 75, 25, 0.08) 45%, transparent 70%);
+  filter: blur(85px);
+}
+
+.bokeh-orb-2 {
+  position: absolute;
+  width: 460px;
+  height: 460px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(160, 185, 150, 0.22) 0%, rgba(120, 155, 110, 0.08) 50%, transparent 70%);
+  filter: blur(70px);
+  pointer-events: none;
+  z-index: 0;
+  animation: ember-float-reverse 22s ease-in-out infinite alternate;
+}
+
+.dark .bokeh-orb-2 {
+  background: radial-gradient(circle, rgba(75, 105, 70, 0.16) 0%, rgba(45, 70, 40, 0.06) 50%, transparent 70%);
+  filter: blur(80px);
+}
+
+/* ── Glassmorphism & Translucent Surfaces ───────────────────────────────── */
+
+.frosted-glass-card {
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(26px) saturate(160%);
+  -webkit-backdrop-filter: blur(26px) saturate(160%);
+  border: 1px solid rgba(210, 185, 160, 0.4);
+  box-shadow:
+    0 4px 6px -1px rgba(100, 60, 20, 0.03),
+    0 16px 36px -8px rgba(120, 70, 25, 0.07),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.dark .frosted-glass-card {
+  background: rgba(24, 20, 16, 0.72);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border: 1px solid rgba(224, 115, 46, 0.2);
+  box-shadow:
+    0 4px 10px 0 rgba(0, 0, 0, 0.35),
+    0 20px 45px -10px rgba(0, 0, 0, 0.6),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.glass-inset-well {
+  background: rgba(250, 246, 240, 0.65);
+  border: 1px solid rgba(190, 165, 140, 0.3);
+  box-shadow: inset 0 2px 4px 0 rgba(100, 60, 20, 0.04);
+}
+
+.dark .glass-inset-well {
+  background: rgba(14, 11, 8, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 2px 6px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* ── Primary & Secondary Buttons ───────────────────────────────────────── */
+
+.btn-primary {
+  background: linear-gradient(180deg, #D96827 0%, #C4551E 100%);
+  color: #FFFFFF;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 2px 4px rgba(196, 85, 30, 0.25),
+    0 6px 16px -2px rgba(196, 85, 30, 0.35),
+    inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(180deg, #E27230 0%, #CE5C23 100%);
+  box-shadow:
+    0 4px 8px rgba(196, 85, 30, 0.3),
+    0 10px 24px -2px rgba(196, 85, 30, 0.45),
+    inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0.5px);
+  box-shadow:
+    0 1px 2px rgba(196, 85, 30, 0.3),
+    0 3px 8px -1px rgba(196, 85, 30, 0.3);
+}
+
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.35);
+  color: var(--color-veil-ink);
+  border: 1px solid rgba(190, 165, 140, 0.45);
+  font-weight: 500;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.dark .btn-ghost {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(201, 93, 38, 0.5);
+  transform: translateY(-1px);
+}
+
+.dark .btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(224, 115, 46, 0.4);
+}
+
+/* ── Stepper / Progress Bar ────────────────────────────────────────────── */
+
+.step-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.25s ease;
+}
+
+.step-circle-active {
+  background-color: #C95D26;
+  color: #FFFFFF;
+  box-shadow: 0 0 10px rgba(201, 93, 38, 0.4);
+}
+
+.step-circle-inactive {
+  background-color: rgba(140, 120, 100, 0.18);
+  color: var(--color-veil-muted);
+}
+
+.dark .step-circle-inactive {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+/* ── Keyframe Animations ───────────────────────────────────────────────── */
+
+@keyframes ember-float {
+  0% { transform: translate(0px, 0px) scale(1); }
+  50% { transform: translate(25px, -30px) scale(1.05); }
+  100% { transform: translate(-20px, 20px) scale(0.95); }
+}
+
+@keyframes ember-float-reverse {
+  0% { transform: translate(0px, 0px) scale(1); }
+  50% { transform: translate(-30px, 25px) scale(1.08); }
+  100% { transform: translate(20px, -20px) scale(0.92); }
+}
+
+/* ── Botanical Flower & Honeybee Animations ── */
+
+/* Smooth organic wandering flight path orbiting the flower bloom with organic spline easing */
+@keyframes bee-organic-wander {
+  0% {
+    transform: translate(68px, 82px) rotate(-12deg);
+  }
+  12% {
+    transform: translate(96px, 56px) rotate(-4deg);
+  }
+  25% {
+    transform: translate(132px, 48px) rotate(8deg);
+  }
+  38% {
+    transform: translate(168px, 66px) rotate(18deg);
+  }
+  50% {
+    transform: translate(176px, 100px) rotate(4deg);
+  }
+  62% {
+    transform: translate(154px, 126px) rotate(-14deg);
+  }
+  75% {
+    transform: translate(118px, 114px) rotate(-20deg);
+  }
+  88% {
+    transform: translate(78px, 110px) rotate(-8deg);
+  }
+  100% {
+    transform: translate(68px, 82px) rotate(-12deg);
+  }
+}
+
+/* Secondary micro-bobbing for living organic hover effect */
+@keyframes bee-micro-hover {
+  0%, 100% {
+    transform: translate(0px, 0px) rotate(0deg);
+  }
+  25% {
+    transform: translate(0.8px, -2.2px) rotate(-1.2deg);
+  }
+  50% {
+    transform: translate(-0.6px, 0.8px) rotate(0.6deg);
+  }
+  75% {
+    transform: translate(1.2px, 1.8px) rotate(1.4deg);
+  }
+}
+
+/* Translucent wings high-speed flutter */
+@keyframes wing-flutter-left {
+  0%, 100% {
+    transform: rotate(-24deg) scale(1, 1);
+    opacity: 0.95;
+  }
+  50% {
+    transform: rotate(-10deg) scale(0.68, 0.45);
+    opacity: 0.6;
+  }
+}
+
+@keyframes wing-flutter-right {
+  0%, 100% {
+    transform: rotate(20deg) scale(1, 1);
+    opacity: 0.95;
+  }
+  50% {
+    transform: rotate(8deg) scale(0.68, 0.45);
+    opacity: 0.6;
+  }
+}
+
+/* Natural gentle breeze swaying for the entire botanical plant from its root base */
+@keyframes flower-organic-breeze {
+  0% {
+    transform: rotate(0deg) skewX(0deg);
+  }
+  24% {
+    transform: rotate(1.8deg) skewX(0.8deg);
+  }
+  50% {
+    transform: rotate(-1.2deg) skewX(-0.5deg);
+  }
+  74% {
+    transform: rotate(2.2deg) skewX(1deg);
+  }
+  88% {
+    transform: rotate(-0.6deg) skewX(-0.3deg);
+  }
+  100% {
+    transform: rotate(0deg) skewX(0deg);
+  }
+}
+
+/* Interactive energetic flight loop on click */
+@keyframes bee-dash-loop {
+  0% {
+    transform: translate(62px, 80px) rotate(-14deg) scale(1);
+  }
+  25% {
+    transform: translate(135px, 15px) rotate(-35deg) scale(1.15);
+  }
+  50% {
+    transform: translate(205px, 70px) rotate(30deg) scale(1.2);
+  }
+  75% {
+    transform: translate(95px, 145px) rotate(10deg) scale(1.08);
+  }
+  100% {
+    transform: translate(62px, 80px) rotate(-14deg) scale(1);
+  }
+}
+
+.anim-bee-flight {
+  animation: bee-organic-wander 15s ease-in-out infinite;
+}
+
+.anim-bee-dash {
+  animation: bee-dash-loop 2.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.anim-bee-hover {
+  animation: bee-micro-hover 2.2s ease-in-out infinite;
+}
+
+.anim-wing-left {
+  transform-box: fill-box;
+  transform-origin: bottom center;
+  animation: wing-flutter-left 0.08s ease-in-out infinite;
+}
+
+.anim-wing-right {
+  transform-box: fill-box;
+  transform-origin: bottom center;
+  animation: wing-flutter-right 0.08s ease-in-out infinite;
+}
+
+.anim-flower-sway {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: flower-organic-breeze 10s ease-in-out infinite;
+}
+
+/* ── Botanical Flower Responsive Positioning & Safe Aspect Ratio Scaling ── */
+
+.botanical-accent-base {
+  pointer-events: none !important;
+  user-select: none !important;
+  position: absolute;
+  z-index: 0;
+  filter: drop-shadow(0 14px 28px rgba(120, 60, 20, 0.12));
+}
+
+/* ChatPage unauthenticated welcome card: gracefully scales down, hides on mobile screens/short viewports */
+.botanical-chat-auth {
+  position: absolute;
+  right: -1.5rem;
+  bottom: -2.5rem;
+  width: clamp(80px, 18vw, 135px);
+  opacity: 0.35;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  filter: drop-shadow(0 12px 24px rgba(120, 60, 20, 0.1));
+}
+
+@media (max-width: 640px), (max-height: 640px) {
+  .botanical-chat-auth {
+    display: none !important;
+  }
+}
+
+/* ChatPage empty conversation panel: scales down smoothly, hides on smaller aspect ratios / tablets */
+.botanical-chat-empty {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.5rem;
+  width: clamp(85px, 14vw, 145px);
+  opacity: 0.38;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  filter: drop-shadow(0 10px 20px rgba(120, 60, 20, 0.08));
+}
+
+@media (max-width: 768px), (max-height: 650px) {
+  .botanical-chat-empty {
+    display: none !important;
+  }
+}
+
+/* CreatePage Step 1 form: pinned safely outside layout, scales smoothly, hides on narrow screens */
+.botanical-create-step1 {
+  position: absolute;
+  right: -6rem;
+  bottom: 1.5rem;
+  width: clamp(100px, 14vw, 160px);
+  opacity: 0.35;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  filter: drop-shadow(0 14px 28px rgba(120, 60, 20, 0.12));
+}
+
+@media (max-width: 1280px), (max-height: 700px) {
+  .botanical-create-step1 {
+    display: none !important;
+  }
+}
+
+/* CreatePage Step 2 (Encrypting loading state): carefully bounded micro-accent */
+.botanical-create-step2-bee {
+  position: absolute;
+  right: -1.75rem;
+  top: -0.25rem;
+  width: 3.25rem;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  opacity: 0.85;
+}
+
+@media (max-width: 520px), (max-height: 580px) {
+  .botanical-create-step2-bee {
+    display: none !important;
+  }
+}
+
+/* CreatePage Step 3 (Share link ready): pinned safely outside card, hides on smaller aspect ratios */
+.botanical-create-step3 {
+  position: absolute;
+  right: -4.5rem;
+  bottom: -1.5rem;
+  width: clamp(95px, 13vw, 145px);
+  opacity: 0.4;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  filter: drop-shadow(0 14px 28px rgba(120, 60, 20, 0.12));
+}
+
+@media (max-width: 1120px), (max-height: 680px) {
+  .botanical-create-step3 {
+    display: none !important;
+  }
+}
+
+.anim-fade-up {
+  animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.anim-fade-in {
+  animation: fadeIn 0.35s ease-out forwards;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(140, 110, 80, 0.25);
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(224, 115, 46, 0.3);
+}

@@ -1,0 +1,155 @@
+{
+  "friendRequests": [],
+  "conversations": [
+    {
+      "id": "ccdb4a67-e74e-4475-91c6-ce4fbdd1d996",
+      "createdAt": "2026-08-25T11:26:31.303Z",
+      "updatedAt": "2026-08-25T11:26:31.305Z",
+      "participants": [
+        {
+          "userId": "alice",
+          "lastReadAt": "2026-08-25T11:26:31.303Z"
+        },
+        {
+          "userId": "bob",
+          "lastReadAt": "2026-08-25T11:26:31.303Z"
+        }
+      ]
+    },
+    {
+      "id": "fc5a188f-b9eb-4d94-a049-fe1c16f89865",
+      "createdAt": "2026-08-25T12:24:19.562Z",
+      "updatedAt": "2026-08-25T12:24:19.562Z",
+      "participants": [
+        {
+          "userId": "4aba866b-10bd-4c6e-850b-7b76080f36df",
+          "lastReadAt": "2026-08-25T12:24:19.562Z"
+        },
+        {
+          "userId": "123b851b-a94d-479e-950d-496fa956c624",
+          "lastReadAt": "2026-08-25T12:24:19.562Z"
+        }
+      ]
+    },
+    {
+      "id": "95e8afaa-82ac-4e0b-ae9a-c3352f32b4dc",
+      "createdAt": "2026-08-25T12:27:10.114Z",
+      "updatedAt": "2026-08-25T12:27:52.259Z",
+      "participants": [
+        {
+          "userId": "3df7cb28-41b4-4fbe-8e8e-f87a51c9963a",
+          "lastReadAt": "2026-08-25T12:29:05.874Z"
+        },
+        {
+          "userId": "synapse_2_demo_id",
+          "lastReadAt": "2026-08-25T12:27:10.114Z"
+        }
+      ]
+    },
+    {
+      "id": "d38ebdd6-024a-45e3-8274-74dbd610b9f7",
+      "createdAt": "2026-08-25T12:29:29.814Z",
+      "updatedAt": "2026-08-25T12:51:27.062Z",
+      "participants": [
+        {
+          "userId": "229f62d4-96ed-48f9-abef-a4545a069e3b",
+          "lastReadAt": "2026-08-25T12:40:58.847Z"
+        },
+        {
+          "userId": "3df7cb28-41b4-4fbe-8e8e-f87a51c9963a",
+          "lastReadAt": "2026-08-25T12:54:37.565Z"
+        }
+      ]
+    }
+  ],
+  "messages": [
+    {
+      "id": "3f690bd8-7a0a-4ac3-94ec-89a777d3f24a",
+      "conversationId": "ccdb4a67-e74e-4475-91c6-ce4fbdd1d996",
+      "senderId": "alice",
+      "type": "TEXT",
+      "content": "Hello check this share: https://example.com/share/ABC123 and more text",
+      "expiresAt": null,
+      "createdAt": "2026-08-25T11:26:31.305Z"
+    },
+    {
+      "id": "e108ca66-c7db-495a-945a-acc5eaef1a12",
+      "conversationId": "95e8afaa-82ac-4e0b-ae9a-c3352f32b4dc",
+      "senderId": "3df7cb28-41b4-4fbe-8e8e-f87a51c9963a",
+      "type": "TEXT",
+      "content": "yo ngs",
+      "expiresAt": null,
+      "createdAt": "2026-08-25T12:27:36.494Z"
+    },
+    {
+      "id": "e82b8763-dce1-4eee-94b2-1ed64835f4ea",
+      "conversationId": "95e8afaa-82ac-4e0b-ae9a-c3352f32b4dc",
+      "senderId": "3df7cb28-41b4-4fbe-8e8e-f87a51c9963a",
+      "type": "CAPSULE",
+      "content": "Sealed Capsule (SECURE)",
+      "capsuleId": "3a96b759-4c59-489a-8878-3b8746d400ba",
+      "recipe": "SECURE",
+      "expiresAt": "2026-08-26T12:27:52.254Z",
+      "maxViews": 3,
+      "burnAfterRead": false,
+      "requiresPassword": false,
+      "createdAt": "2026-08-25T12:27:52.259Z"
+    },
+    {
+      "id": "447c637e-cc43-4469-a370-1713e7b16397",
+      "conversationId": "d38ebdd6-024a-45e3-8274-74dbd610b9f7",
+      "senderId": "229f62d4-96ed-48f9-abef-a4545a069e3b",
+      "type": "CAPSULE",
+      "content": "Sealed Capsule (SECURE)",
+      "capsuleId": "5316dce4-7392-478e-a4da-7243db4bc558",
+      "recipe": "SECURE",
+      "expiresAt": "2026-08-26T12:29:41.679Z",
+      "maxViews": 3,
+      "burnAfterRead": false,
+      "requiresPassword": true,
+      "createdAt": "2026-08-25T12:29:41.683Z"
+    },
+    {
+      "id": "fc3e3b5b-3a3a-4734-ada7-8b23ffe95418",
+      "conversationId": "d38ebdd6-024a-45e3-8274-74dbd610b9f7",
+      "senderId": "3df7cb28-41b4-4fbe-8e8e-f87a51c9963a",
+      "type": "CAPSULE",
+      "content": "Shared an encrypted secret",
+      "capsuleId": "c5afe417-f635-48ee-8153-862ce632ebc9",
+      "recipe": "QUICK",
+      "expiresAt": "2026-09-01T12:32:35.799Z",
+      "maxViews": 5,
+      "burnAfterRead": false,
+      "requiresPassword": false,
+      "createdAt": "2026-08-25T12:32:39.982Z"
+    },
+    {
+      "id": "773da869-5bf0-4f18-afe9-84e2891a4abc",
+      "conversationId": "d38ebdd6-024a-45e3-8274-74dbd610b9f7",
+      "senderId": "229f62d4-96ed-48f9-abef-a4545a069e3b",
+      "type": "CAPSULE",
+      "content": "Sealed Capsule (SECURE)\n\n🔒 Secret Link: http://localhost:5175/share/e3fdb9a0-7975-4970-9554-1af24057bd99",
+      "capsuleId": "e3fdb9a0-7975-4970-9554-1af24057bd99",
+      "recipe": "SECURE",
+      "expiresAt": "2026-08-26T12:40:57.743Z",
+      "maxViews": 3,
+      "burnAfterRead": false,
+      "requiresPassword": false,
+      "createdAt": "2026-08-25T12:40:57.747Z"
+    },
+    {
+      "id": "a8e1307c-f795-4aa6-be3f-ffb193eb9a8e",
+      "conversationId": "d38ebdd6-024a-45e3-8274-74dbd610b9f7",
+      "senderId": "3df7cb28-41b4-4fbe-8e8e-f87a51c9963a",
+      "type": "CAPSULE",
+      "content": "Sealed Capsule (SECURE)\n\n🔒 Secret Link: http://localhost:5175/share/6e75926e-e173-4ad3-abb2-e919ebd2b1c8",
+      "capsuleId": "6e75926e-e173-4ad3-abb2-e919ebd2b1c8",
+      "recipe": "SECURE",
+      "expiresAt": "2026-08-26T12:51:27.056Z",
+      "maxViews": 3,
+      "burnAfterRead": false,
+      "requiresPassword": false,
+      "createdAt": "2026-08-25T12:51:27.062Z"
+    }
+  ]
+}

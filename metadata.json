@@ -1,0 +1,8 @@
+{
+  "name": "Veil",
+  "description": "Zero-knowledge ephemeral secret sharing and private encrypted communication.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
