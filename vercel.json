@@ -1,16 +1,10 @@
 {
   "version": 2,
   "buildCommand": "npm run build:backend",
-  "builds": [
+  "rewrites": [
     {
-      "src": "apps/backend/dist/server.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "apps/backend/dist/server.js"
+      "source": "/(.*)",
+      "destination": "/api"
     }
   ]
 }
